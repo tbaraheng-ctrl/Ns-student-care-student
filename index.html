@@ -39,6 +39,13 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* เพิ่ม Animation ให้เวลาเปลี่ยนหน้าดูสมูทขึ้น */
+        .app-section { animation: fadeSlideUp 0.25s ease-out forwards; }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="text-gray-800 antialiased relative">
@@ -185,6 +192,9 @@
                         <select id="reg-room" onchange="fetchClassStudents()" class="w-full p-2 border rounded-lg bg-white outline-none focus:border-ns-blue">
                             <option value="">เลือกห้อง</option>
                             <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                            <option value="10">10</option>
                         </select>
                     </div>
                 </div>
@@ -246,11 +256,18 @@
                     <div class="w-20 h-20 bg-[#00B900] rounded-2xl mx-auto flex items-center justify-center text-white text-4xl mb-4 shadow-lg shadow-green-200">
                         <i class="fab fa-line"></i>
                     </div>
-                    <p class="text-sm text-gray-600 mb-6">คลิกปุ่มด้านล่างเพื่อเชื่อมต่อบัญชีสำหรับรับการแจ้งเตือนพฤติกรรม สแกนเข้า-ออก และเพิ่มเพื่อนโรงเรียนอัตโนมัติ</p>
+                    <p class="text-sm text-gray-600 mb-6">เพื่อให้ระบบสามารถส่งข้อความแจ้งเตือนถึงคุณได้ กรุณาเพิ่มเพื่อนและเชื่อมต่อบัญชี</p>
                     
-                    <button type="button" onclick="startLineLoginAndRegister()" class="bg-[#00B900] text-white px-6 py-4 rounded-xl font-bold shadow-md hover:bg-green-600 w-full flex items-center justify-center gap-2 active:scale-95 transition-all">
-                        <i class="fas fa-link text-xl"></i> เชื่อมต่อ LINE และเสร็จสิ้น
-                    </button>
+                    <div class="space-y-3">
+                        <!-- ปุ่มใหม่: ดึงลิงก์จากตั้งค่าระบบมาเปิดเพื่อเพิ่มเพื่อน -->
+                        <button type="button" onclick="addSchoolLineFriend()" class="bg-white text-[#00B900] border-2 border-[#00B900] px-6 py-3 rounded-xl font-bold hover:bg-green-50 w-full flex items-center justify-center gap-2 transition-all">
+                            <i class="fas fa-user-plus text-xl"></i> 1. กดเพิ่มเพื่อนโรงเรียน
+                        </button>
+                        
+                        <button type="button" onclick="startLineLoginAndRegister()" class="bg-[#00B900] text-white px-6 py-4 rounded-xl font-bold shadow-md hover:bg-green-600 w-full flex items-center justify-center gap-2 active:scale-95 transition-all">
+                            <i class="fas fa-link text-xl"></i> 2. เชื่อมต่อบัญชีเสร็จสิ้น
+                        </button>
+                    </div>
                 </div>
                 <div class="flex gap-3 mt-2">
                     <button type="button" onclick="prevRegStep(2)" class="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium">ย้อนกลับแก้ไขข้อมูล</button>
@@ -295,14 +312,21 @@
                 <!-- VIEW: DASHBOARD (STATISTICS) -->
                 <div id="view-dashboard" class="app-section space-y-4">
                     
-                    <div class="flex justify-between items-center border-l-4 border-ns-orange pl-2 mt-1">
-                        <h2 class="text-lg font-bold text-gray-800">สถิติและพฤติกรรม</h2>
-                        <div class="flex items-center gap-2 text-[10px] sm:text-xs text-gray-500 bg-white px-2 py-1 rounded-lg border shadow-sm">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                            </span>
-                            <span id="dash-sync-time">กำลังเชื่อมต่อ...</span>
+                    <div class="flex flex-col mt-1 gap-2">
+                        <div class="flex justify-between items-center border-l-4 border-ns-orange pl-2">
+                            <h2 class="text-lg font-bold text-gray-800">สถิติและพฤติกรรม</h2>
+                            <button onclick="forceRefreshStats()" id="btn-refresh-stats" class="flex items-center gap-1.5 text-[10px] sm:text-xs text-white bg-ns-blue hover:bg-blue-800 px-3 py-1.5 rounded-lg shadow-sm transition-all active:scale-95">
+                                <i class="fas fa-sync-alt" id="icon-refresh-stats"></i>
+                                <span>อัปเดตข้อมูลล่าสุด</span>
+                            </button>
+                        </div>
+                        
+                        <!-- ข้อความแจ้งเตือนให้อัปเดตข้อมูล -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2.5 flex items-start gap-2 shadow-sm">
+                            <i class="fas fa-info-circle text-yellow-600 mt-0.5 text-sm"></i>
+                            <p class="text-[10px] sm:text-[11px] text-yellow-800 leading-tight">
+                                <strong class="font-bold text-yellow-900">หมายเหตุ:</strong> ข้อมูลที่แสดงอาจยังไม่ใช่ข้อมูลปัจจุบัน (อัปเดตล่าสุด: <span id="dash-sync-time" class="font-bold text-ns-blue">-</span>) กรุณากดปุ่ม <strong>"อัปเดตข้อมูลล่าสุด"</strong> เพื่อดึงข้อมูลปัจจุบัน
+                            </p>
                         </div>
                     </div>
                     
@@ -318,6 +342,7 @@
                                 </div>
                                 <p class="text-xs text-gray-500 font-medium">สแกนเข้า-ออก</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-scan">0</span> <span class="text-sm font-normal text-gray-500">ครั้ง</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg w-max border border-blue-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-ns-blue"></i> กดดูประวัติ</div>
                             </div>
                         </div>
                         
@@ -327,6 +352,7 @@
                                 <i class="fas fa-clock text-2xl text-ns-orange mb-2"></i>
                                 <p class="text-xs text-gray-500 font-medium">มาสาย (โรงเรียน)</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-late-school">0</span> <span class="text-sm font-normal text-gray-500">ครั้ง</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg w-max border border-orange-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-ns-orange"></i> กดดูประวัติ</div>
                             </div>
                         </div>
 
@@ -336,6 +362,7 @@
                                 <i class="fas fa-calendar-times text-2xl text-red-500 mb-2"></i>
                                 <p class="text-xs text-gray-500 font-medium">ขาดเรียน</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-missed-class">0</span> <span class="text-sm font-normal text-gray-500">คาบ</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg w-max border border-red-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-red-500"></i> กดดูประวัติ</div>
                             </div>
                         </div>
 
@@ -345,6 +372,7 @@
                                 <i class="fas fa-user-clock text-2xl text-yellow-500 mb-2"></i>
                                 <p class="text-xs text-gray-500 font-medium">มาสาย (รายวิชา)</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-late-class">0</span> <span class="text-sm font-normal text-gray-500">คาบ</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg w-max border border-amber-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-amber-500"></i> กดดูประวัติ</div>
                             </div>
                         </div>
 
@@ -354,6 +382,7 @@
                                 <i class="fas fa-running text-2xl text-purple-500 mb-2"></i>
                                 <p class="text-xs text-gray-500 font-medium">หนีเรียน</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-skipped-class">0</span> <span class="text-sm font-normal text-gray-500">คาบ</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg w-max border border-purple-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-purple-500"></i> กดดูประวัติ</div>
                             </div>
                         </div>
 
@@ -368,6 +397,7 @@
                                 </div>
                                 <p class="text-xs text-gray-500 font-medium">ลาป่วย/กิจ</p>
                                 <h3 class="text-2xl font-bold text-gray-800"><span id="stat-leave">0</span> <span class="text-sm font-normal text-gray-500">ครั้ง</span></h3>
+                                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg w-max border border-teal-100/50 shadow-sm transition-transform"><i class="fas fa-hand-pointer animate-pulse text-teal-500"></i> กดดูประวัติ</div>
                             </div>
                         </div>
 
@@ -381,8 +411,10 @@
                                 <span id="ms-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 shadow-sm">กำลังประมวลผล</span>
                             </div>
                             <p class="text-[11px] text-gray-500 mb-2">ประเมินความเสี่ยงจากสถิติ "ขาดเรียน" และ "หนีเรียน" รวมกัน</p>
-                            <div class="w-full bg-gray-100 rounded-full h-2.5 mt-1 overflow-hidden shadow-inner">
-                                <div id="ms-progress-bar" class="h-2.5 rounded-full transition-all duration-700 bg-gray-400" style="width: 0%"></div>
+                            <!-- เปลี่ยนเส้นกราฟให้สามารถแสดง 2 สีต่อกันได้ (สีทองสำหรับวิชาที่แก้ตัวแล้ว / สีแดงสำหรับวิชาที่ยังไม่แก้) -->
+                            <div class="w-full bg-gray-100 rounded-full h-2.5 mt-1 overflow-hidden shadow-inner flex">
+                                <div id="ms-progress-remediated" class="h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500" style="width: 0%"></div>
+                                <div id="ms-progress-bar" class="h-2.5 transition-all duration-700 bg-gray-400" style="width: 0%"></div>
                             </div>
                             <div class="flex justify-between text-[10px] text-gray-400 mt-1.5 font-medium px-1">
                                 <span>ปลอดภัย</span>
@@ -413,7 +445,10 @@
                                     </div>
                                 </div>
                                 <p class="text-xs text-green-100 font-medium mt-2">คะแนนพฤติกรรม</p>
-                                <h3 class="text-2xl font-bold"><span id="stat-behavior">100</span> <span class="text-sm font-normal opacity-80">คะแนน</span></h3>
+                                <div class="flex justify-between items-end">
+                                    <h3 class="text-2xl font-bold"><span id="stat-behavior">100</span> <span class="text-sm font-normal opacity-80">คะแนน</span></h3>
+                                    <div class="flex items-center gap-1.5 text-[10px] font-bold text-white bg-white/20 px-2.5 py-1 rounded-lg backdrop-blur-sm shadow-sm mb-1 border border-white/10"><i class="fas fa-hand-pointer animate-pulse text-yellow-300"></i> กดดูประวัติ</div>
+                                </div>
                                 <div class="w-full bg-black/20 rounded-full h-1.5 mt-2 overflow-hidden shadow-inner">
                                     <div id="bh-progress-bar" class="h-1.5 rounded-full transition-all duration-700 bg-white" style="width: 100%"></div>
                                 </div>
@@ -515,9 +550,24 @@
 
                 <!-- VIEW: CLUB (ชุมนุม) -->
                 <div id="view-club" class="app-section hidden-view space-y-4">
-                    <div class="flex justify-between items-center border-l-4 border-purple-500 pl-2 mb-2">
-                        <h2 class="text-lg font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
-                        <span class="text-[10px] text-gray-400" id="club-sync-status"><i class="fas fa-sync fa-spin mr-1"></i> อัปเดตล่าสุด...</span>
+                    <div class="flex justify-between items-center mb-3 gap-2">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navApp('dashboard')" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:bg-gray-900 transition-all active:scale-95 shrink-0">
+                                <i class="fas fa-home text-sm"></i>
+                                <span class="text-xs font-bold">กลับไปหน้าหลัก</span>
+                            </button>
+                            <div class="border-l-4 border-purple-500 pl-2 hidden sm:block">
+                                <h2 class="text-lg font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
+                            </div>
+                        </div>
+                        <button onclick="forceRefreshClubs()" class="flex items-center gap-1.5 text-[10px] sm:text-xs text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-2 rounded-xl border border-purple-200 shadow-sm transition-all active:scale-95 shrink-0">
+                            <i class="fas fa-sync-alt" id="icon-refresh-clubs"></i> <span class="hidden sm:inline font-medium">อัปเดตข้อมูล</span>
+                        </button>
+                    </div>
+                    
+                    <!-- หัวข้อแสดงผลสำหรับหน้าจอมือถือโดยเฉพาะเพื่อไม่ให้เบียดกับปุ่ม -->
+                    <div class="border-l-4 border-purple-500 pl-2 sm:hidden mb-2">
+                        <h2 class="text-base font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
                     </div>
                     
                     <div id="club-list-body" class="grid grid-cols-1 gap-4 pb-4">
@@ -531,43 +581,78 @@
                 <!-- VIEW: ADMIN PANEL -->
                 <div id="view-admin" class="app-section hidden-view space-y-4">
                     <h2 class="text-lg font-bold text-gray-800 border-l-4 border-gray-800 pl-2">แผงควบคุม (Admin Panel)</h2>
-                    
-                    <!-- Announcement Banner (แสดงเฉพาะแอดมินในหน้าตั้งค่า) -->
-                    <div id="dashboard-announcement" class="hidden-view bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm relative overflow-hidden mt-1">
-                        <div class="absolute -right-4 -top-4 w-16 h-16 bg-white/40 rounded-full z-0"></div>
-                        <div class="relative z-10 flex items-start gap-3">
-                            <i class="fas fa-bullhorn text-ns-blue text-2xl mt-1"></i>
-                            <div class="flex-1">
-                                <h3 class="font-bold text-ns-blue text-base">ประชาสัมพันธ์ข่าวสาร</h3>
-                                <p id="dashboard-announcement-text" class="text-sm text-gray-700 mt-1 whitespace-pre-line"></p>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
                         <div class="flex items-center gap-4 border-b pb-4">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border">
-                                <img id="setting-logo-preview" src="https://ui-avatars.com/api/?name=NS&background=1E3A8A&color=fff" class="w-full h-full object-cover">
+                            <!-- ลิงก์ฟอร์มอื่นๆ หรือ Apps Script -->
+                            <a href="#" onclick="showAlert('วิธีเพิ่มฟอร์ม', 'หากคุณสร้าง Google Form สำหรับตัดคะแนนพฤติกรรม หรืออื่นๆ คุณสามารถนำลิงก์มาฝังไว้ที่หน้า Admin นี้ได้เพื่อให้ทีมงานกดใช้สะดวกขึ้น', 'info'); return false;" class="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all group active:scale-95">
+                                <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-lg shrink-0">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-600">เพิ่มลิงก์ฟอร์มแก้ไขอื่นๆ</h4>
+                                    <p class="text-[10px] text-gray-400">คลิกเพื่อดูคำแนะนำ</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- ส่วนฟอร์มตั้งค่าแบบเลือกหมวดหมู่ -->
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="mb-5">
+                            <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-sliders-h text-ns-blue mr-2"></i>เลือกส่วนที่ต้องการตั้งค่าระบบ:</label>
+                            <div class="relative">
+                                <select id="admin-setting-category" onchange="switchAdminCategory(this.value)" class="w-full p-3 pl-4 pr-10 border border-gray-300 rounded-xl bg-gray-50 text-gray-800 font-medium shadow-sm outline-none focus:border-ns-blue focus:ring-2 focus:ring-blue-100 appearance-none transition-all">
+                                    <option value="cat-general">🏫 ข้อมูลพื้นฐาน (ชื่อโรงเรียน, โลโก้, Line)</option>
+                                    <option value="cat-club">🎭 ตั้งค่าระบบชุมนุม</option>
+                                    <option value="cat-behavior">⭐ ตั้งค่าเกณฑ์ประเมินพฤติกรรม</option>
+                                    <option value="cat-announce">📢 ประชาสัมพันธ์ข่าวสารหน้าแรก</option>
+                                    <option value="cat-permission">🔐 สิทธิ์การเข้าถึงเมนู (ตามบทบาท)</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">โลโก้โรงเรียน</label>
-                                <input type="file" id="set-logo-file" accept="image/*" class="text-xs w-full">
-                                <input type="hidden" id="logo-base64" value="">
+                        </div>
+
+                        <!-- 1. หมวด: ข้อมูลพื้นฐาน -->
+                        <div id="cat-general" class="admin-cat-section space-y-4 animate-[fadeSlideUp_0.3s_ease-out]">
+                            <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">ข้อมูลพื้นฐาน</h3>
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border">
+                                    <img id="setting-logo-preview" src="https://ui-avatars.com/api/?name=NS&background=1E3A8A&color=fff" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">โลโก้โรงเรียน</label>
+                                    <input type="file" id="set-logo-file" accept="image/*" class="text-xs w-full">
+                                    <input type="hidden" id="logo-base64" value="">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อโรงเรียน</label>
+                                <input type="text" id="setting-school-name" class="w-full p-2 border rounded-lg outline-none focus:border-ns-blue bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ Line OA สำหรับเพิ่มเพื่อน</label>
+                                <input type="text" id="setting-line-link" class="w-full p-2 border rounded-lg outline-none focus:border-ns-blue text-xs text-gray-500">
                             </div>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อโรงเรียน</label>
-                            <input type="text" id="setting-school-name" class="w-full p-2 border rounded-lg outline-none focus:border-ns-blue bg-gray-50">
-                        </div>
+                        <!-- 2. หมวด: ระบบชุมนุม -->
+                        <div id="cat-club" class="admin-cat-section space-y-4 hidden animate-[fadeSlideUp_0.3s_ease-out]">
+                            <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">ตั้งค่าระบบชุมนุม</h3>
+                            
+                            <!-- เพิ่มปุ่มสวิตช์ เปิด/ปิด ชุมนุม -->
+                            <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-4 shadow-sm">
+                                <label class="flex items-center justify-between text-sm font-bold text-purple-800 mb-1 cursor-pointer">
+                                    <span><i class="fas fa-power-off mr-2"></i>เปิดให้ลงทะเบียนชุมนุม</span>
+                                    <input type="checkbox" id="setting-club-status" class="toggle-checkbox w-5 h-5 text-purple-600 rounded" checked>
+                                </label>
+                                <p class="text-[10px] text-purple-600/80">* หาก <strong>"ปิด"</strong> ระบบจะล็อกการลงทะเบียนทันที โดยไม่ต้องรอให้หมดเวลา</p>
+                            </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ Line OA สำหรับเพิ่มเพื่อน</label>
-                            <input type="text" id="setting-line-link" class="w-full p-2 border rounded-lg outline-none focus:border-ns-blue text-xs text-gray-500">
-                        </div>
-
-                        <div class="pt-4 border-t border-gray-100">
-                            <h3 class="text-sm font-bold text-gray-700 mb-3">ตั้งค่าระบบชุมนุม</h3>
                             <div class="grid grid-cols-2 gap-3 mb-3">
                                 <div>
                                     <label class="block text-xs text-gray-600 mb-1">เริ่มลงทะเบียน</label>
@@ -584,9 +669,9 @@
                             </label>
                         </div>
 
-                        <!-- ตั้งค่าเกณฑ์คะแนนพฤติกรรม -->
-                        <div class="pt-4 border-t border-gray-100">
-                            <h3 class="text-sm font-bold text-gray-700 mb-3">ตั้งค่าเกณฑ์ประเมินพฤติกรรม</h3>
+                        <!-- 3. หมวด: เกณฑ์คะแนนพฤติกรรม -->
+                        <div id="cat-behavior" class="admin-cat-section space-y-4 hidden animate-[fadeSlideUp_0.3s_ease-out]">
+                            <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">ตั้งค่าเกณฑ์ประเมินพฤติกรรม</h3>
                             <div class="grid grid-cols-2 gap-3 mb-2">
                                 <div>
                                     <label class="block text-[10px] text-gray-600 mb-1">ต่ำกว่าค่านี้ = <span class="text-ns-orange font-bold">เสี่ยง</span></label>
@@ -600,9 +685,9 @@
                             <p class="text-[10px] text-gray-500 italic">*คะแนนตั้งแต่เกณฑ์เสี่ยงขึ้นไป = ปกติ / เกิน 100 = ดีเยี่ยม</p>
                         </div>
 
-                        <!-- ประชาสัมพันธ์ข่าวสาร -->
-                        <div class="pt-4 border-t border-gray-100">
-                            <h3 class="text-sm font-bold text-gray-700 mb-3">ประชาสัมพันธ์ข่าวสารในหน้าแรก</h3>
+                        <!-- 4. หมวด: ประกาศข่าวสาร -->
+                        <div id="cat-announce" class="admin-cat-section space-y-4 hidden animate-[fadeSlideUp_0.3s_ease-out]">
+                            <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">ประชาสัมพันธ์ข่าวสารในหน้าแรก</h3>
                             <label class="flex items-center justify-between text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 mb-3">
                                 เปิดแสดงประกาศ
                                 <input type="checkbox" id="setting-show-announcement" class="toggle-checkbox">
@@ -613,8 +698,9 @@
                             </div>
                         </div>
 
-                        <div class="pt-4 border-t">
-                            <h3 class="text-sm font-bold text-gray-700 mb-3">สิทธิ์การเข้าถึงเมนู (ตามบทบาท)</h3>
+                        <!-- 5. หมวด: สิทธิ์การเข้าถึง -->
+                        <div id="cat-permission" class="admin-cat-section space-y-4 hidden animate-[fadeSlideUp_0.3s_ease-out]">
+                            <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">สิทธิ์การเข้าถึงเมนู (ตามบทบาท)</h3>
                             
                             <div class="mb-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
                                 <p class="text-xs font-semibold text-gray-800 mb-2"><i class="fas fa-chart-pie text-ns-blue mr-1"></i> เมนูสถิติ</p>
@@ -641,7 +727,10 @@
                             </div>
                         </div>
 
-                        <button onclick="saveSettings()" class="w-full bg-gray-800 text-white font-medium py-3 rounded-xl mt-4 shadow-md hover:bg-gray-900 transition">บันทึกการตั้งค่าแอดมิน</button>
+                        <!-- ปุ่มบันทึก -->
+                        <button onclick="saveSettings()" class="w-full bg-gray-800 text-white font-medium py-3 rounded-xl mt-6 shadow-md hover:bg-gray-900 transition flex justify-center items-center gap-2">
+                            <i class="fas fa-save"></i> บันทึกการตั้งค่าทั้งหมด
+                        </button>
                     </div>
                 </div>
 
@@ -758,12 +847,38 @@
         </div>
     </div>
 
+    <!-- Modal: Announcement (ข่าวประชาสัมพันธ์แบบป๊อปอัป) -->
+    <div id="announcement-modal" class="fixed inset-0 bg-black/60 z-[120] hidden-view flex justify-center items-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 transform transition-all shadow-2xl relative">
+            <div class="absolute -right-4 -top-4 w-20 h-20 bg-blue-50 rounded-full z-0"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-4 border-b pb-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-ns-blue flex items-center justify-center text-2xl shadow-sm shrink-0">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 leading-tight">ประกาศจากโรงเรียน</h3>
+                        <p class="text-xs text-ns-blue font-medium mt-0.5">ข่าวสารและประชาสัมพันธ์</p>
+                    </div>
+                </div>
+                <div class="max-h-[50vh] overflow-y-auto pr-2 mb-6">
+                    <p id="announcement-modal-text" class="text-sm text-gray-700 whitespace-pre-line leading-relaxed"></p>
+                </div>
+                <button onclick="closeAnnouncementModal()" class="w-full bg-ns-blue text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-blue-800 hover:shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
+                    <i class="fas fa-check-circle"></i> ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========================================== -->
     <!-- JAVASCRIPT LOGIC -->
     <!-- ========================================== -->
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyGxA-VPEmk4HYGH43_YLFYZuXSgNEKN--5QkXPwSGI2FodfcikXGwxZDk7IkQdcyU/exec"; 
-        const LIFF_ID = "2009880863-QFRkiIsy";
+        
+        // ใส่ LIFF ID ตัวใหม่ที่ได้จาก Provider เดียวกับบอท (ระวังอย่าให้มีช่องว่างหรือบรรทัดใหม่)
+        const LIFF_ID = "2009881010-uAKXQOsM"; 
         
         let currentUser = null; 
         let currentRegStep = 1;
@@ -772,17 +887,90 @@
         let clubInterval = null; 
         let systemSettings = {}; 
         let studentCurrentClub = null; 
+        let alertCallback = null; // เพิ่มตัวแปรสำหรับรับ Callback เพื่อทำงานต่อหลังจากกดตกลง
+        let announcementShown = false; // ตัวแปรเช็คว่าเคยแสดงป๊อปอัปข่าวสารไปแล้วหรือยังในเซสชันนี้
+        let isPreloadingDetails = false;
 
         document.addEventListener("DOMContentLoaded", async () => {
             const savedUser = localStorage.getItem('ns_username');
             if(savedUser) {
                 document.getElementById('login-username').value = savedUser;
                 document.getElementById('remember-me').checked = true;
+                
+                // [ใหม่] พรีโหลดข้อมูลสถิติของ user เดิมทันทีที่เปิดเว็บ
+                const cleanId = savedUser.replace(/_p|_P/gi, '').trim();
+                preloadStatsSilent(cleanId);
             }
+            
+            // [ใหม่] พรีโหลดข้อมูลชุมนุมรอไว้สำหรับทุกคน
+            preloadClubsSilent();
+
+            // [ใหม่] หากพิมพ์ชื่อผู้ใช้ใหม่ ให้แอบโหลดข้อมูลเตรียมรอไว้เลย (ตอนเปลี่ยนไปช่องรหัสผ่าน)
+            document.getElementById('login-username').addEventListener('blur', (e) => {
+                const u = e.target.value.trim();
+                if (u.length >= 4) {
+                    const cleanId = u.replace(/_p|_P/gi, '').trim();
+                    preloadStatsSilent(cleanId);
+                }
+            });
+
             document.getElementById('leave-date').valueAsDate = new Date();
             await initApp();
             await initLIFF();
         });
+
+        // --- ฟังก์ชันโหลดข้อมูลเงียบๆ หลังบ้านตอนเปิดเว็บ (Preload) ---
+        async function preloadStatsSilent(cleanId) {
+            const cacheKey = 'ns_stats_' + cleanId;
+            const timeKey = 'ns_stats_time_' + cleanId;
+            try {
+                const res = await apiCall('getStats', { id: cleanId });
+                if (res.status === 'success') {
+                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(timeKey, Date.now().toString());
+                    if (res.data.settings) {
+                        systemSettings = res.data.settings;
+                        localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
+                        applySettingsToUI(); 
+                    }
+                }
+            } catch(e) { console.log('Preload stats skipped'); }
+            
+            // สั่งโหลดประวัติย่อยๆ ต่อทันที
+            preloadStatDetailsSilent(cleanId);
+        }
+
+        // [ใหม่] ฟังก์ชันแอบดึงรายละเอียดทุกหมวดหมู่มาเก็บในเครื่องทันทีแบบไม่หน่วงเวลา
+        async function preloadStatDetailsSilent(cleanId) {
+            if (isPreloadingDetails) return;
+            isPreloadingDetails = true;
+            
+            // จัดลำดับให้ดึงประวัติกลุ่มเรียนก่อน เพื่อให้เร็วที่สุดหากผู้ใช้กดดู
+            const types = ['missed_class', 'late_class', 'skipped_class', 'scan', 'late_school', 'leave', 'behavior'];
+            
+            // ยิง Request พร้อมกันทั้งหมด (Parallel) เพื่อให้โหลดเสร็จ 100% ภายใน 1-2 วินาทีแรก
+            types.forEach(type => {
+                apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
+                    if (res.status === 'success' && res.data) {
+                        localStorage.setItem(`ns_stat_details_${cleanId}_${type}`, JSON.stringify(res.data));
+                    }
+                }).catch(e => console.log(`Preload details ${type} skipped`));
+            });
+            
+            isPreloadingDetails = false;
+        }
+
+        async function preloadClubsSilent() {
+            const cacheKey = 'ns_club_list_data';
+            const timeKey = 'ns_club_time';
+            try {
+                const res = await apiCall('getClubs', {});
+                if (res.status === 'success') {
+                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(timeKey, Date.now().toString());
+                }
+            } catch(e) { console.log('Preload clubs skipped'); }
+        }
 
         // จัดการเชื่อมต่อ API แบบมี Timeout ป้องกันเว็บค้าง
         async function apiCall(action, params = {}) {
@@ -889,6 +1077,10 @@
             const annText = document.getElementById('setting-announcement-text');
             if (systemSettings.announcementText !== undefined && annText) annText.value = systemSettings.announcementText;
             
+            // อัปเดตสถานะเปิด/ปิดชุมนุม
+            const clubStatus = document.getElementById('setting-club-status');
+            if (clubStatus) clubStatus.checked = (systemSettings.isOpenClub !== false); // ค่าเริ่มต้นคือ true(เปิด)
+
             // --- อัปเดตข้อมูลเกณฑ์คะแนนพฤติกรรมลงในหน้าฟอร์ม ---
             const wLimit = document.getElementById('setting-bh-warning');
             if (wLimit && systemSettings.bhWarning !== undefined) wLimit.value = systemSettings.bhWarning;
@@ -936,14 +1128,26 @@
                             hideLoading();
                             
                             if(res.status === 'success') {
-                                showAlert('ลงทะเบียนสำเร็จ!', 'ระบบเชื่อมต่อ LINE เรียบร้อย กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้ ' + payload.G, 'success');
-                                document.getElementById('login-username').value = payload.G;
-                                switchView('view-login');
-                                currentRegStep = 1; updateRegProgress();
-                                document.querySelectorAll('#view-register input').forEach(i => i.value = '');
-                                document.getElementById('reg-step-3').classList.add('hidden-view');
-                                document.getElementById('reg-step-1').classList.remove('hidden-view');
-                                liff.logout();
+                                let hasLineLink = systemSettings && systemSettings.lineLink;
+                                let successMsg = 'ระบบเชื่อมต่อ LINE เรียบร้อย กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้ ' + payload.G;
+                                if(hasLineLink) {
+                                    successMsg += '\n\nเมื่อกดตกลง ระบบจะพาไป "เพิ่มเพื่อน" กับ LINE โรงเรียนเพื่อรับการแจ้งเตือน';
+                                }
+
+                                showAlert('ลงทะเบียนสำเร็จ!', successMsg, 'success', () => {
+                                    document.getElementById('login-username').value = payload.G;
+                                    switchView('view-login');
+                                    currentRegStep = 1; updateRegProgress();
+                                    document.querySelectorAll('#view-register input').forEach(i => i.value = '');
+                                    document.getElementById('reg-step-3').classList.add('hidden-view');
+                                    document.getElementById('reg-step-1').classList.remove('hidden-view');
+                                    liff.logout();
+                                    
+                                    // พาไปหน้าเพิ่มเพื่อนอัตโนมัติ (หากตั้งค่าลิงก์ Line OA ไว้)
+                                    if(hasLineLink) {
+                                        window.location.href = systemSettings.lineLink;
+                                    }
+                                });
                             } else {
                                 showAlert('เกิดข้อผิดพลาด', res.message || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
                             }
@@ -985,27 +1189,67 @@
             }
         }
 
+        // เพิ่มฟังก์ชันสำหรับเปิดลิงก์เพิ่มเพื่อน
+        function addSchoolLineFriend() {
+            // ดึงลิงก์จากที่แอดมินตั้งค่าไว้ หรือใช้ค่าเริ่มต้นถ้าไม่ได้ตั้ง
+            const lineLink = (systemSettings && systemSettings.lineLink) ? systemSettings.lineLink : "";
+            if(lineLink && lineLink !== "") {
+                window.open(lineLink, '_blank');
+            } else {
+                showAlert('แจ้งเตือน', 'โรงเรียนยังไม่ได้ตั้งค่าลิงก์ Line OA', 'info');
+            }
+        }
+
+        // --- เพิ่ม 3 ฟังก์ชันนี้กลับเข้าไป ---
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden-view'); }
         function hideLoading() { 
             document.getElementById('loading-overlay').classList.add('hidden-view'); 
             document.getElementById('loading-text').innerText = "กำลังประมวลผล...";
         }
         
-        function showAlert(title, message, type='info') {
+        function showAlert(title, message, type='info', callback=null) {
             document.getElementById('alert-title').innerText = title;
             document.getElementById('alert-message').innerText = message;
             const icon = document.getElementById('alert-icon');
             icon.className = 'text-5xl mb-4 ' + (type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-ns-blue');
             icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : type === 'error' ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-info-circle"></i>';
+            alertCallback = callback;
             document.getElementById('alert-modal').classList.remove('hidden-view');
         }
-        function closeAlert() { document.getElementById('alert-modal').classList.add('hidden-view'); }
+        // ------------------------------------
+
+        function closeAlert() { 
+            document.getElementById('alert-modal').classList.add('hidden-view'); 
+            if(typeof alertCallback === 'function') {
+                alertCallback();
+                alertCallback = null;
+            }
+        }
+
+        function closeAnnouncementModal() {
+            document.getElementById('announcement-modal').classList.add('hidden-view');
+        }
+
+        function showAnnouncementPopup(text) {
+            if (!announcementShown && text) {
+                document.getElementById('announcement-modal-text').innerText = text;
+                document.getElementById('announcement-modal').classList.remove('hidden-view');
+                announcementShown = true;
+            }
+        }
 
         function switchView(viewId) {
             ['view-login', 'view-register', 'app-layout'].forEach(id => {
                 document.getElementById(id).classList.add('hidden-view');
             });
             document.getElementById(viewId).classList.remove('hidden-view');
+        }
+        
+        function switchAdminCategory(catId) {
+            document.querySelectorAll('.admin-cat-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById(catId).classList.remove('hidden');
         }
 
         function togglePassword(inputId, iconId) {
@@ -1033,7 +1277,7 @@
                 const res = await apiCall('login', { u: u, p: p });
 
                 if(res.status === 'success') {
-                    sessionStorage.clear(); 
+                    // เอาการลบ sessionStorage ออก เพื่อให้โหลด Cache เดิมได้ข้ามครั้ง
                     
                     if(rem) localStorage.setItem('ns_username', u);
                     else localStorage.removeItem('ns_username');
@@ -1068,6 +1312,11 @@
                         navApp('admin'); 
                     } else {
                         navApp('dashboard'); 
+                        
+                        // [เพิ่มประสิทธิภาพ] สั่งโหลดข้อมูลรอแบบเงียบๆ ทันที 100% ไม่ต้องหน่วงเวลาแล้ว
+                        const perms = systemSettings?.permissions?.[res.role];
+                        if (perms && perms.club) preloadClubsSilent();
+                        preloadStatDetailsSilent(res.data.id);
                     }
                 } else {
                     showAlert('เข้าระบบไม่สำเร็จ', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
@@ -1080,9 +1329,12 @@
 
         function logout() {
             currentUser = null;
+            announcementShown = false;
             document.getElementById('login-password').value = '';
             if (dashInterval) clearInterval(dashInterval);
             if (clubInterval) clearInterval(clubInterval);
+            
+            // ใช้ sessionStorage แทนเพื่อไม่ให้ลบ Cache ของ localStorage
             sessionStorage.clear(); 
             switchView('view-login');
         }
@@ -1141,12 +1393,16 @@
             loadStats();
         }
 
+        let lastAdminFetch = 0;
         async function loadAdminSettings() {
+            // [เพิ่มประสิทธิภาพ] ดึงค่าใหม่เมื่อข้อมูลเก่าเกิน 60 วินาที เพื่อไม่ให้โหลดทุกครั้งที่กดเมนูแอดมิน
+            if (Date.now() - lastAdminFetch < 60000) return; 
             try {
                 const res = await apiCall('getSettings');
                 if (res.status === 'success') {
                     systemSettings = res.data;
                     localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
+                    lastAdminFetch = Date.now();
                     applySettingsToUI();
                 }
             } catch(e) { console.error("โหลดตั้งค่าแอดมินล้มเหลว", e); }
@@ -1162,17 +1418,21 @@
                 }
             });
             document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden-view'));
-            document.getElementById('view-' + target).classList.remove('hidden-view');
+            
+            // ใช้เทคนิค Reflow เพื่อให้ Animation ทำงานทุกครั้งที่เปลี่ยนหน้า
+            const targetView = document.getElementById('view-' + target);
+            targetView.classList.remove('hidden-view');
+            targetView.style.animation = 'none';
+            targetView.offsetHeight; /* trigger reflow */
+            targetView.style.animation = null;
 
             if (dashInterval) clearInterval(dashInterval);
             if (clubInterval) clearInterval(clubInterval);
 
             if (target === 'dashboard') {
                 loadStats();
-                dashInterval = setInterval(fetchStatsSilent, 5000); 
             } else if (target === 'club') {
                 loadClubs(); 
-                clubInterval = setInterval(fetchClubsSilent, 5000); 
             } else if (target === 'admin') {
                 loadAdminSettings(); 
             }
@@ -1183,14 +1443,24 @@
             
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
             const cacheKey = 'ns_stats_' + cleanId;
-            const cachedData = sessionStorage.getItem(cacheKey);
+            const timeKey = 'ns_stats_time_' + cleanId;
+            
+            // [ปรับปรุง] เปลี่ยนจาก sessionStorage เป็น localStorage เพื่อให้ข้อมูลคงอยู่เมื่อปิดหน้าเว็บ
+            const cachedData = localStorage.getItem(cacheKey);
+            const lastFetch = localStorage.getItem(timeKey);
             
             if (cachedData) {
                 const parsedData = JSON.parse(cachedData);
                 systemSettings = parsedData.settings || systemSettings;
                 updateStatsUI(parsedData);
-                document.getElementById('dash-sync-time').innerText = "ข้อมูลล่าสุด (Cache)";
-                fetchStatsSilent();
+                
+                if (lastFetch) {
+                    const now = new Date(parseInt(lastFetch));
+                    const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}`;
+                    document.getElementById('dash-sync-time').innerText = timeStr + " น.";
+                } else {
+                    document.getElementById('dash-sync-time').innerText = "ข้อมูลแคชเดิม";
+                }
             } else {
                 if(currentUser.role !== 'admin') {
                     document.getElementById('stat-scan').innerHTML = '<i class="fas fa-spinner fa-spin text-gray-300"></i>';
@@ -1199,7 +1469,8 @@
                     const res = await apiCall('getStats', { id: cleanId });
                     if (!currentUser) return; 
                     if(res.status === 'success') {
-                        sessionStorage.setItem(cacheKey, JSON.stringify(res.data)); 
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data)); 
+                        localStorage.setItem(timeKey, Date.now().toString());
                         
                         if (res.data.settings) {
                             systemSettings = res.data.settings;
@@ -1213,16 +1484,30 @@
             }
         }
 
-        async function fetchStatsSilent() {
-            if (!currentUser || currentUser.role === 'admin') return;
+        let isFetchingStats = false; // ตัวแปรล็อกป้องกันการดึงข้อมูลซ้ำซ้อนถ้าเน็ตช้า
+
+        async function forceRefreshStats() {
+            if (!currentUser || currentUser.role === 'admin' || isFetchingStats) return;
+            
+            isFetchingStats = true; 
+            const btn = document.getElementById('btn-refresh-stats');
+            const icon = document.getElementById('icon-refresh-stats');
+            
+            if (icon) icon.classList.add('fa-spin');
             
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
+            const cacheKey = 'ns_stats_' + cleanId;
+            const timeKey = 'ns_stats_time_' + cleanId;
+            
+            // สั่งลบ Cache ประวัติย่อยทิ้งให้หมด เพื่อให้โหลดใหม่ด้วย
+            const types = ['scan', 'late_school', 'missed_class', 'late_class', 'skipped_class', 'leave', 'behavior'];
+            types.forEach(t => localStorage.removeItem(`ns_stat_details_${cleanId}_${t}`));
             
             try {
                 const res = await apiCall('getStats', { id: cleanId });
                 if(res.status === 'success' && currentUser) {
-                    const cacheKey = 'ns_stats_' + cleanId;
-                    sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(timeKey, Date.now().toString());
                     
                     if (res.data.settings) {
                         systemSettings = res.data.settings;
@@ -1231,8 +1516,20 @@
                     
                     updateStatsUI(res.data);
                     updateSyncTime('dash-sync-time');
+                    
+                    // ดึงประวัติย่อยใหม่แบบเบื้องหลัง
+                    preloadStatDetailsSilent(cleanId);
+                    
+                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลสถิติล่าสุดจากระบบเรียบร้อยแล้ว', 'success');
+                } else {
+                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
                 }
-            } catch (e) { }
+            } catch (e) { 
+                handleErrorAlert(e);
+            } finally {
+                isFetchingStats = false; 
+                if (icon) icon.classList.remove('fa-spin');
+            }
         }
 
         function updateStatsUI(data) {
@@ -1245,13 +1542,9 @@
                 }
             }
 
-            const annContainer = document.getElementById('dashboard-announcement');
-            const annText = document.getElementById('dashboard-announcement-text');
+            // แสดงป๊อปอัปประชาสัมพันธ์ (ถ้าเปิดใช้งานและมีข้อความ)
             if (systemSettings && systemSettings.showAnnouncement && systemSettings.announcementText) {
-                if (annContainer) annContainer.classList.remove('hidden-view');
-                if (annText) annText.innerText = systemSettings.announcementText;
-            } else {
-                if (annContainer) annContainer.classList.add('hidden-view');
+                showAnnouncementPopup(systemSettings.announcementText);
             }
 
             if (role === 'admin') return; 
@@ -1280,46 +1573,95 @@
             document.getElementById('stat-leave-personal').innerText = data.leavePersonal;
             
             const totalAbsence = (Number(data.missedClass) || 0) + (Number(data.skippedClass) || 0);
+            
+            // คำนวณจำนวนวิชาที่ติดและแก้ตัวแล้วจาก msDetails
+            let remediatedAbsence = 0;
+            let remCount = 0;
+
+            if (data.msDetails && data.msDetails.length > 0) {
+                data.msDetails.forEach(subj => {
+                    if (subj.remediated) {
+                        remediatedAbsence += subj.count;
+                        remCount++;
+                    }
+                });
+            }
+            
+            // จำนวนครั้งที่ยังคงทำงานอยู่ (ยอดที่ยังไม่แก้) - จะเป็นตัวกำหนดความยาวของเส้นกราฟ
+            const activeAbsence = Math.max(0, totalAbsence - remediatedAbsence);
+
             const msBadge = document.getElementById('ms-status-badge');
             const msBar = document.getElementById('ms-progress-bar');
+            const msBarRemediated = document.getElementById('ms-progress-remediated');
             const msIcon = document.getElementById('ms-icon');
             const msDetailsContainer = document.getElementById('ms-details-container');
             const msDetailsList = document.getElementById('ms-details-list');
             
             if (msBadge && msBar && msIcon) {
-                let progressPercent = Math.min(100, (totalAbsence / 10) * 100); 
-                msBar.style.width = progressPercent + '%';
+                // คำนวณความกว้างจาก "ยอดที่ยังไม่ได้แก้" เท่านั้น เพื่อให้กราฟหดตัวลง
+                let activeProgressPercent = Math.min(100, (activeAbsence / 10) * 100); 
+                
+                // ปิดการแสดงผลของกราฟสีทองแบบต่อกัน (ให้ความกว้างเป็น 0)
+                if (msBarRemediated) msBarRemediated.style.width = '0%';
+                
+                // ให้เส้นกราฟหดตัวลงไปอยู่จุดปลอดภัย
+                msBar.style.width = activeProgressPercent + '%';
 
-                if (totalAbsence >= 8) {
+                if (activeAbsence >= 8) {
                     msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
-                    msBadge.innerText = 'แนวโน้มติด ม.ส.';
-                    msBar.className = 'h-2.5 rounded-full transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
+                    msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
+                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
                     msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
-                } else if (totalAbsence >= 4) {
+                } else if (activeAbsence >= 4) {
                     msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
-                    msBadge.innerText = 'มีความเสี่ยง';
-                    msBar.className = 'h-2.5 rounded-full transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
+                    msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
+                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
                     msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
                 } else {
-                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
-                    msBadge.innerText = 'ปลอดภัย';
-                    msBar.className = 'h-2.5 rounded-full transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
-                    msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
+                    // ปลอดภัย (ต่ำกว่า 4 ครั้ง หรือ แก้จนยอดลดลงมาต่ำกว่า 4 แล้ว)
+                    if (remCount > 0) {
+                        // ถ้าปลอดภัยเพราะแก้ตัวมาแล้ว ให้เป็นสีเหลืองทอง
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
+                        msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
+                        msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
+                    } else {
+                        // ปลอดภัยปกติ
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
+                        msBadge.innerText = 'ปลอดภัย';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
+                        msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
+                    }
                 }
 
                 if (totalAbsence >= 4 && data.msDetails && data.msDetails.length > 0) {
                     msDetailsContainer.classList.remove('hidden-view');
                     let listHtml = '';
                     data.msDetails.forEach(subj => {
+                        // ตรวจสอบสถานะการแก้ตัวเพื่อสลับคลาส CSS (ปรับเป็นสีเขียวทั้งหมด)
+                        const isRemediated = subj.remediated === true;
+                        const borderClass = isRemediated ? 'border-green-300' : 'border-red-100';
+                        const bgClass = isRemediated ? 'bg-green-50/70' : 'bg-white';
+                        const nameColor = isRemediated ? 'text-green-700' : 'text-gray-800';
+                        const countColor = isRemediated ? 'text-green-700' : 'text-red-600';
+                        const countLabelColor = isRemediated ? 'text-green-600' : 'text-red-500';
+                        const countBg = isRemediated ? 'bg-green-100 border-green-200' : 'bg-red-50 border-red-200';
+                        
+                        // ป้ายกำกับ (Badge) ดำเนินแก้ตัวแล้ว (สีเขียว)
+                        const badgeHtml = isRemediated 
+                            ? `<div class="mt-1.5"><span class="text-[9px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm"><i class="fas fa-check-circle mr-1"></i>ดำเนินแก้ตัวแล้ว</span></div>` 
+                            : '';
+
                         listHtml += `
-                        <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-red-100 shadow-sm">
+                        <div class="flex justify-between items-center ${bgClass} p-2.5 rounded-xl border ${borderClass} shadow-sm transition-all mb-2">
                             <div class="flex-1 pr-2">
-                                <p class="text-xs font-bold text-gray-800 leading-tight">${subj.code} ${subj.name}</p>
+                                <p class="text-xs font-bold ${nameColor} leading-tight">${subj.code} ${subj.name}</p>
                                 <p class="text-[10px] text-gray-500 mt-0.5"><i class="fas fa-chalkboard-teacher text-gray-400 mr-1"></i>ครู${subj.teacher.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '')}</p>
+                                ${badgeHtml}
                             </div>
-                            <div class="text-center bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 shrink-0">
-                                <span class="text-sm font-bold text-red-600">${subj.count}</span>
-                                <span class="text-[9px] text-red-500 block -mt-1">ครั้ง</span>
+                            <div class="text-center ${countBg} px-3 py-1.5 rounded-lg border shrink-0">
+                                <span class="text-sm font-bold ${countColor}">${subj.count}</span>
+                                <span class="text-[9px] ${countLabelColor} block -mt-1">ครั้ง</span>
                             </div>
                         </div>`;
                     });
@@ -1427,11 +1769,12 @@
 
         function updateSyncTime(elementId) {
             const now = new Date();
-            const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}:${now.getSeconds() < 10 ? '0':''}${now.getSeconds()}`;
+            const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}`;
             const el = document.getElementById(elementId);
-            if(el) el.innerText = timeStr;
+            if(el) el.innerText = timeStr + " น.";
         }
 
+        // [แก้ไข] ดึงข้อมูลจาก Cache ล่วงหน้า ทำให้แสดงผล 0 วินาที
         async function openDetailModal(type) {
             const titleMap = { 
                 scan: 'ประวัติเข้า-ออก', 
@@ -1443,32 +1786,71 @@
                 behavior: 'ประวัติพฤติกรรม' 
             };
             document.getElementById('modal-title').innerText = titleMap[type];
-            
-            document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลจากระบบ...</p></div>';
             document.getElementById('detail-modal').classList.remove('hidden-view');
 
-            try {
-                const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
-                const res = await apiCall('getStatDetails', { id: cleanId, type: type });
-                if (res.status === 'success' && res.data && res.data.length > 0) {
-                    let html = '';
-                    res.data.forEach((item, index) => {
-                        html += `<div class="p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2 text-sm">
-                            <div class="flex justify-between font-semibold text-gray-700 mb-1">
-                                <span><i class="far fa-calendar-alt mr-1"></i> ${item.date}</span>
-                                <span class="${item.status.includes('-') || item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') ? 'text-red-500' : 'text-ns-blue'}">${item.status}</span>
-                            </div>
-                            <p class="text-gray-500">${item.detail}</p>
-                        </div>`;
-                    });
-                    document.getElementById('modal-content').innerHTML = html;
-                } else {
-                    document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
+            const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
+            const cacheKey = `ns_stat_details_${cleanId}_${type}`;
+            const cachedData = localStorage.getItem(cacheKey);
+
+            if (cachedData) {
+                // ถ้ามี Cache ให้วาดหน้าต่างทันทีไม่ต้องรอโหลด
+                renderDetailModalUI(JSON.parse(cachedData));
+                
+                // แอบโหลดซ้ำเพื่อเช็คของใหม่แบบเนียนๆ
+                apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
+                    if (res.status === 'success' && res.data) {
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        // อัปเดต UI อีกครั้งหากเปิดหน้าเดิมอยู่
+                        if (!document.getElementById('detail-modal').classList.contains('hidden-view') && 
+                            document.getElementById('modal-title').innerText === titleMap[type]) {
+                            renderDetailModalUI(res.data);
+                        }
+                    }
+                }).catch(e => {});
+            } else {
+                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลจากระบบ...</p></div>';
+                try {
+                    const res = await apiCall('getStatDetails', { id: cleanId, type: type });
+                    if (res.status === 'success' && res.data) {
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        renderDetailModalUI(res.data);
+                    } else {
+                        document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
+                    }
+                } catch(e) {
+                    document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
                 }
-            } catch(e) {
-                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
             }
         }
+
+        // ออกแบบกล่องประวัติใหม่ เพื่อแยกการแสดงผลวันที่ และ คาบที่ ให้เด่นชัดเจน
+        function renderDetailModalUI(data) {
+            if (data && data.length > 0) {
+                let html = '';
+                data.forEach((item, index) => {
+                    // กำหนดสีและแถบสัญลักษณ์ตามความรุนแรง
+                    const isAlert = item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') || item.status.includes('-');
+                    const colorClass = isAlert ? 'text-red-500' : 'text-ns-blue';
+                    const bgClass = isAlert ? 'bg-red-50' : 'bg-blue-50';
+                    const borderLeft = isAlert ? 'bg-red-400' : 'bg-ns-blue';
+
+                    html += `<div class="p-3 bg-white rounded-xl border border-gray-100 mb-3 text-sm shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${borderLeft}"></div>
+                        
+                        <div class="pl-2 flex justify-between items-center font-semibold text-gray-700 mb-2 border-b border-gray-50 pb-1.5">
+                            <span class="${colorClass} flex items-center gap-1.5"><i class="far fa-calendar-alt"></i> ${item.date}</span>
+                            <span class="${colorClass} ${bgClass} px-2 py-0.5 rounded-md text-xs border ${isAlert ? 'border-red-100' : 'border-blue-100'}">${item.status}</span>
+                        </div>
+                        
+                        <p class="pl-2 text-gray-600 text-xs sm:text-sm leading-relaxed">${item.detail}</p>
+                    </div>`;
+                });
+                document.getElementById('modal-content').innerHTML = html;
+            } else {
+                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-200"></i><p>ไม่พบประวัติข้อมูล</p></div>';
+            }
+        }
+
         function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden-view'); }
 
         // --- ฟังก์ชันเปิด/ปิด QR Code ประจำตัว ---
@@ -1621,7 +2003,18 @@
         // --- Club Logic ---
         async function loadClubs() {
             const tableBody = document.getElementById('club-list-body');
-            const syncIcon = document.getElementById('club-sync-status');
+            
+            // [ใหม่] ตรวจสอบสวิตช์ปิดระบบหลักก่อน
+            if (systemSettings && systemSettings.isOpenClub === false) {
+                if (clubInterval) clearInterval(clubInterval);
+                tableBody.innerHTML = `
+                    <div class="bg-red-50 rounded-2xl p-8 shadow-sm border border-red-100 text-center text-red-500 w-full col-span-1">
+                        <i class="fas fa-lock text-5xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">ปิดรับสมัครชุมนุม</h3>
+                        <p class="text-sm text-red-400">ขณะนี้ระบบปิดการลงทะเบียนชุมนุมชั่วคราว</p>
+                    </div>`;
+                return;
+            }
             
             if (systemSettings && systemSettings.startDate && systemSettings.endDate) {
                 const now = new Date();
@@ -1637,17 +2030,18 @@
                             <h3 class="text-xl font-bold mb-2">อยู่นอกเวลาลงทะเบียน</h3>
                             <p class="text-sm text-red-400">เปิดระบบ: ${start.toLocaleDateString('th-TH')} - ${end.toLocaleDateString('th-TH')}</p>
                         </div>`;
-                    syncIcon.innerHTML = '<i class="fas fa-clock mr-1"></i> ระบบปิด';
                     return;
                 }
             }
 
             const cacheKey = 'ns_club_list_data';
-            const cachedData = sessionStorage.getItem(cacheKey);
+            const timeKey = 'ns_club_time';
+            
+            // [ปรับปรุง] เปลี่ยนมาใช้ localStorage
+            const cachedData = localStorage.getItem(cacheKey);
             
             if (cachedData) {
-                renderClubsUI(JSON.parse(cachedData), syncIcon, true);
-                fetchClubsSilent(); 
+                renderClubsUI(JSON.parse(cachedData), true);
             } else {
                 tableBody.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center text-gray-500 w-full"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังโหลดข้อมูลชุมนุม...</p></div>';
                 try {
@@ -1655,28 +2049,40 @@
                     if (!currentUser) return; 
 
                     if(res.status === 'success') {
-                        sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
-                        renderClubsUI(res.data, syncIcon, false);
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        localStorage.setItem(timeKey, Date.now().toString());
+                        renderClubsUI(res.data, false);
                     }
                 } catch(e) {}
             }
         }
 
-        async function fetchClubsSilent() {
+        async function forceRefreshClubs() {
             if (!currentUser) return;
-            const syncIcon = document.getElementById('club-sync-status');
+            const icon = document.getElementById('icon-refresh-clubs');
+            const cacheKey = 'ns_club_list_data';
+            const timeKey = 'ns_club_time';
+            
+            if (icon) icon.classList.add('fa-spin');
             
             try {
                 const res = await apiCall('getClubs', {});
                 if(res.status === 'success' && currentUser) {
-                    const cacheKey = 'ns_club_list_data';
-                    sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
-                    renderClubsUI(res.data, syncIcon, false);
+                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(timeKey, Date.now().toString());
+                    renderClubsUI(res.data, false);
+                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลชุมนุมล่าสุดเรียบร้อยแล้ว', 'success');
+                } else {
+                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
                 }
-            } catch (e) { }
+            } catch (e) { 
+                handleErrorAlert(e);
+            } finally {
+                if (icon) icon.classList.remove('fa-spin');
+            }
         }
 
-        function renderClubsUI(data, syncIcon, isCached) {
+        function renderClubsUI(data, isCached) {
             clubDataList = data;
             const tableBody = document.getElementById('club-list-body');
             let html = '';
@@ -1740,15 +2146,6 @@
                 </div>`;
             });
             tableBody.innerHTML = html;
-            
-            if (isCached) {
-                syncIcon.innerHTML = `<i class="fas fa-bolt mr-1 text-ns-orange"></i> ข้อมูลล่าสุด (Cache)`;
-            } else {
-                const now = new Date();
-                const timeString = `${now.getHours() < 10 ? '0' : ''}${now.getHours()}:${now.getMinutes() < 10 ? '0' : ''}${now.getMinutes()}:${now.getSeconds() < 10 ? '0' : ''}${now.getSeconds()}`;
-                syncIcon.classList.remove('text-ns-blue');
-                syncIcon.innerHTML = `<i class="fas fa-check-circle mr-1 text-green-500"></i> อัปเดตล่าสุด ${timeString}`;
-            }
         }
 
         let selectedClubId = null;
@@ -1771,11 +2168,34 @@
 
         async function confirmClubRegistration() {
             closeClubModal();
-            showLoading();
+            navApp('dashboard'); // พาไปหน้าสถิติทันที
             
             const club = clubDataList.find(c => c.id === selectedClubId);
             const u = currentUser.data;
             const cleanId = String(u.id).replace(/_p|_P/gi, '').trim(); 
+
+            // Backup ข้อมูลเดิม
+            const oldClub = studentCurrentClub ? JSON.parse(JSON.stringify(studentCurrentClub)) : null;
+
+            // อัปเดต UI ชุมนุมทันที (Optimistic Update)
+            studentCurrentClub = {
+                id: club.id,
+                name: club.name,
+                regDate: new Date().toISOString(),
+                teacher: club.teacher,
+                objective: club.objective,
+                location: club.location,
+                equipment: club.equipment
+            };
+
+            const cacheKey = 'ns_stats_' + cleanId;
+            let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+            currentStats.currentClub = studentCurrentClub;
+            updateStatsUI(currentStats);
+
+            // แจ้งเตือนว่ากำลังบันทึกเบื้องหลัง
+            const dashSyncTime = document.getElementById('dash-sync-time');
+            if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึกเบื้องหลัง...';
 
             const payload = {
                 clubId: selectedClubId,
@@ -1789,20 +2209,32 @@
                 equipment: club.equipment
             };
 
-            try {
-                const res = await apiCall('registerClub', payload);
+            // เรียก API อยู่เบื้องหลังโดยไม่บล็อกหน้าจอ
+            apiCall('registerClub', payload).then(res => {
                 if(res.status === 'success') {
-                    showAlert('สำเร็จ', 'ลงทะเบียนชุมนุมเรียบร้อยแล้ว', 'success');
-                    loadClubs(); 
-                    loadStats(); 
-                    navApp('dashboard'); 
+                    // อัปเดตแคชให้สมบูรณ์
+                    localStorage.setItem(cacheKey, JSON.stringify(currentStats));
+                    localStorage.removeItem('ns_club_list_data');
+                    localStorage.removeItem('ns_club_time');
+
+                    if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-check text-green-500 mr-1"></i> บันทึกสำเร็จ';
+                    setTimeout(() => updateSyncTime('dash-sync-time'), 3000);
                 } else {
+                    // คืนค่ากลับถ้าบันทึกไม่สำเร็จ
+                    studentCurrentClub = oldClub;
+                    currentStats.currentClub = oldClub;
+                    updateStatsUI(currentStats);
+                    if(dashSyncTime) updateSyncTime('dash-sync-time');
                     showAlert('ไม่สามารถลงทะเบียนได้', res.message, 'error');
                 }
-            } catch(e) {
+            }).catch(e => {
+                // คืนค่ากลับถ้าบันทึกไม่สำเร็จ
+                studentCurrentClub = oldClub;
+                currentStats.currentClub = oldClub;
+                updateStatsUI(currentStats);
+                if(dashSyncTime) updateSyncTime('dash-sync-time');
                 handleErrorAlert(e);
-            }
-            hideLoading();
+            });
         }
 
         async function openChangeClubModal() {
@@ -1894,11 +2326,35 @@
 
         async function executeClubChange() {
             document.getElementById('confirm-change-modal').classList.add('hidden-view');
-            showLoading();
+            closeChangeClubModal();
+            navApp('dashboard'); // พาไปหน้าสถิติทันที
             
             const club = clubDataList.find(c => c.id === newSelectedClubId);
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim(); 
             
+            // Backup ข้อมูลเดิม
+            const oldClub = studentCurrentClub ? JSON.parse(JSON.stringify(studentCurrentClub)) : null;
+
+            // อัปเดต UI ชุมนุมทันที (Optimistic Update)
+            studentCurrentClub = {
+                id: club.id,
+                name: club.name,
+                regDate: new Date().toISOString(),
+                teacher: club.teacher,
+                objective: club.objective,
+                location: club.location,
+                equipment: club.equipment
+            };
+
+            const cacheKey = 'ns_stats_' + cleanId;
+            let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+            currentStats.currentClub = studentCurrentClub;
+            updateStatsUI(currentStats);
+
+            // แจ้งเตือนว่ากำลังบันทึกเบื้องหลัง
+            const dashSyncTime = document.getElementById('dash-sync-time');
+            if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึกเบื้องหลัง...';
+
             const payload = {
                 studentId: cleanId, 
                 studentName: currentUser.data.name,
@@ -1911,20 +2367,32 @@
                 newEquipment: club.equipment
             };
 
-            try {
-                const res = await apiCall('changeClub', payload);
+            // เรียก API อยู่เบื้องหลังโดยไม่บล็อกหน้าจอ
+            apiCall('changeClub', payload).then(res => {
                 if(res.status === 'success') {
-                    showAlert('เปลี่ยนชุมนุมสำเร็จ', 'ระบบได้ทำการอัปเดตข้อมูลชุมนุมใหม่ของคุณเรียบร้อยแล้ว', 'success');
-                    closeChangeClubModal();
-                    loadStats(); 
-                    navApp('dashboard'); 
+                    // อัปเดตแคชให้สมบูรณ์
+                    localStorage.setItem(cacheKey, JSON.stringify(currentStats));
+                    localStorage.removeItem('ns_club_list_data');
+                    localStorage.removeItem('ns_club_time');
+
+                    if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-check text-green-500 mr-1"></i> บันทึกสำเร็จ';
+                    setTimeout(() => updateSyncTime('dash-sync-time'), 3000);
                 } else {
+                    // คืนค่ากลับถ้าบันทึกไม่สำเร็จ
+                    studentCurrentClub = oldClub;
+                    currentStats.currentClub = oldClub;
+                    updateStatsUI(currentStats);
+                    if(dashSyncTime) updateSyncTime('dash-sync-time');
                     showAlert('ไม่สามารถเปลี่ยนชุมนุมได้', res.message, 'error');
                 }
-            } catch(e) {
+            }).catch(e => {
+                // คืนค่ากลับถ้าบันทึกไม่สำเร็จ
+                studentCurrentClub = oldClub;
+                currentStats.currentClub = oldClub;
+                updateStatsUI(currentStats);
+                if(dashSyncTime) updateSyncTime('dash-sync-time');
                 handleErrorAlert(e);
-            }
-            hideLoading();
+            });
         }
 
         document.getElementById('set-logo-file').addEventListener('change', function(e) {
@@ -1982,6 +2450,7 @@
                 logoUrl: document.getElementById('logo-base64').value, 
                 clubStartDate: document.getElementById('setting-club-start').value,
                 clubEndDate: document.getElementById('setting-club-end').value,
+                isOpenClub: document.getElementById('setting-club-status').checked, // ดึงสถานะเปิดปิดชุมนุม
                 allowChangeClub: document.getElementById('setting-allow-change-club').checked ? "อนุญาต" : "ไม่อนุญาต",
                 showAnnouncement: document.getElementById('setting-show-announcement').checked,
                 announcementText: document.getElementById('setting-announcement-text').value,
