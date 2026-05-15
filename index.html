@@ -300,6 +300,11 @@
                 <button id="btn-show-qr" onclick="openQrModal()" class="hidden-view text-ns-blue hover:text-blue-600 p-2.5 sm:p-3 bg-blue-50 rounded-full hover:bg-blue-100 transition shadow-sm">
                     <i class="fas fa-qrcode text-lg"></i>
                 </button>
+                <!-- เพิ่มปุ่มตารางเรียนแบบมี Label -->
+                <button id="btn-show-schedule" onclick="openScheduleModal()" class="hidden-view flex items-center gap-1.5 text-ns-blue hover:text-blue-700 px-3 py-2 sm:px-4 sm:py-2 bg-blue-50 rounded-full hover:bg-blue-100 transition shadow-sm font-bold text-xs sm:text-sm border border-blue-100" title="ตารางเรียน">
+                    <i class="fas fa-calendar-alt text-lg"></i>
+                    <span>ตารางเรียน</span>
+                </button>
                 <button onclick="logout()" class="text-gray-400 hover:text-red-500 p-2.5 sm:p-3 bg-gray-50 rounded-full hover:bg-red-50 transition shadow-sm">
                     <i class="fas fa-sign-out-alt text-lg"></i>
                 </button>
@@ -312,6 +317,30 @@
                 <!-- VIEW: DASHBOARD (STATISTICS) -->
                 <div id="view-dashboard" class="app-section space-y-4">
                     
+                    <!-- แบนเนอร์แสดงคาบเรียนปัจจุบัน (จะแสดงเฉพาะตอนมีเรียน) -->
+                    <div id="current-period-banner" class="hidden-view bg-ns-orange border-2 border-ns-blue rounded-2xl p-4 shadow-lg relative overflow-hidden mt-1 mb-2">
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-full border border-white/30 backdrop-blur-sm">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </span>
+                            <span class="text-[9px] font-bold text-white tracking-widest uppercase">กำลังเรียน</span>
+                        </div>
+                        <div class="relative z-10 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white text-ns-orange rounded-xl flex flex-col items-center justify-center font-bold shadow-inner shrink-0 border border-orange-100">
+                                <span class="text-[9px] uppercase tracking-wider opacity-80 -mb-1">คาบ</span>
+                                <span id="current-period-time" class="text-xl leading-none">-</span>
+                            </div>
+                            <div class="flex-1 text-white pr-16">
+                                <h3 id="current-period-subject" class="text-base sm:text-lg font-bold leading-tight drop-shadow-md truncate">-</h3>
+                                <div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] sm:text-xs font-medium text-orange-50">
+                                    <span class="flex items-center gap-1"><i class="fas fa-chalkboard-teacher opacity-80"></i> <span id="current-period-teacher">-</span></span>
+                                    <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt opacity-80"></i> <span id="current-period-location">-</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex flex-col mt-1 gap-2">
                         <div class="flex justify-between items-center border-l-4 border-ns-orange pl-2">
                             <h2 class="text-lg font-bold text-gray-800">สถิติและพฤติกรรม</h2>
@@ -411,7 +440,6 @@
                                 <span id="ms-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 shadow-sm">กำลังประมวลผล</span>
                             </div>
                             <p class="text-[11px] text-gray-500 mb-2">ประเมินความเสี่ยงจากสถิติ "ขาดเรียน" และ "หนีเรียน" รวมกัน</p>
-                            <!-- เปลี่ยนเส้นกราฟให้สามารถแสดง 2 สีต่อกันได้ (สีทองสำหรับวิชาที่แก้ตัวแล้ว / สีแดงสำหรับวิชาที่ยังไม่แก้) -->
                             <div class="w-full bg-gray-100 rounded-full h-2.5 mt-1 overflow-hidden shadow-inner flex">
                                 <div id="ms-progress-remediated" class="h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500" style="width: 0%"></div>
                                 <div id="ms-progress-bar" class="h-2.5 transition-all duration-700 bg-gray-400" style="width: 0%"></div>
@@ -871,6 +899,23 @@
         </div>
     </div>
 
+    <!-- Modal: Schedule (ตารางเรียน) -->
+    <div id="schedule-modal" class="fixed inset-0 bg-black/60 z-[90] hidden-view flex flex-col justify-end sm:justify-center items-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl h-[85vh] sm:h-auto sm:max-h-[85vh] flex flex-col transform transition-transform translate-y-0 shadow-2xl overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-3xl sm:rounded-t-2xl">
+                <h3 class="font-bold text-lg text-ns-blue"><i class="fas fa-calendar-alt mr-2"></i>ตารางเรียน (<span id="schedule-room-title"></span>)</h3>
+                <button onclick="closeScheduleModal()" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-gray-100">
+                <div id="schedule-content" class="w-full">
+                    <!-- JS will inject schedule here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ========================================== -->
     <!-- JAVASCRIPT LOGIC -->
     <!-- ========================================== -->
@@ -940,23 +985,23 @@
             preloadStatDetailsSilent(cleanId);
         }
 
-        // [ใหม่] ฟังก์ชันแอบดึงรายละเอียดทุกหมวดหมู่มาเก็บในเครื่องทันทีแบบไม่หน่วงเวลา
+        // [ใหม่] ฟังก์ชันแอบดึงรายละเอียดทุกหมวดหมู่มาเก็บในเครื่องทันที
         async function preloadStatDetailsSilent(cleanId) {
             if (isPreloadingDetails) return;
             isPreloadingDetails = true;
             
-            // จัดลำดับให้ดึงประวัติกลุ่มเรียนก่อน เพื่อให้เร็วที่สุดหากผู้ใช้กดดู
-            const types = ['missed_class', 'late_class', 'skipped_class', 'scan', 'late_school', 'leave', 'behavior'];
+            const types = ['scan', 'late_school', 'missed_class', 'late_class', 'skipped_class', 'leave', 'behavior'];
             
-            // ยิง Request พร้อมกันทั้งหมด (Parallel) เพื่อให้โหลดเสร็จ 100% ภายใน 1-2 วินาทีแรก
-            types.forEach(type => {
-                apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
+            for (const type of types) {
+                try {
+                    const res = await apiCall('getStatDetails', { id: cleanId, type: type });
                     if (res.status === 'success' && res.data) {
                         localStorage.setItem(`ns_stat_details_${cleanId}_${type}`, JSON.stringify(res.data));
                     }
-                }).catch(e => console.log(`Preload details ${type} skipped`));
-            });
-            
+                    // หน่วงเวลาเล็กน้อยให้ Apps Script ได้พักหายใจ ป้องกัน Error
+                    await new Promise(r => setTimeout(r, 500)); 
+                } catch(e) { console.log(`Preload details ${type} skipped`); }
+            }
             isPreloadingDetails = false;
         }
 
@@ -1313,10 +1358,12 @@
                     } else {
                         navApp('dashboard'); 
                         
-                        // [เพิ่มประสิทธิภาพ] สั่งโหลดข้อมูลรอแบบเงียบๆ ทันที 100% ไม่ต้องหน่วงเวลาแล้ว
-                        const perms = systemSettings?.permissions?.[res.role];
-                        if (perms && perms.club) preloadClubsSilent();
-                        preloadStatDetailsSilent(res.data.id);
+                        // [เพิ่มประสิทธิภาพ] สั่งโหลดข้อมูลรอแบบเงียบๆ
+                        setTimeout(() => {
+                            const perms = systemSettings?.permissions?.[res.role];
+                            if (perms && perms.club) fetchClubsSilent();
+                            preloadStatDetailsSilent(res.data.id);
+                        }, 2000);
                     }
                 } else {
                     showAlert('เข้าระบบไม่สำเร็จ', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
@@ -1349,6 +1396,7 @@
             const navClub = document.querySelector('[data-target="club"]');
             const navAdmin = document.getElementById('nav-btn-admin'); 
             const btnQr = document.getElementById('btn-show-qr');
+            const btnSchedule = document.getElementById('btn-show-schedule');
 
             if(role === 'admin') {
                 greeting.innerHTML = `แอดมิน: <span class="text-base sm:text-lg font-bold text-ns-orange">${u.name || 'Admin'}</span>`;
@@ -1368,6 +1416,15 @@
                 btnQr.classList.remove('hidden-view');
             } else if (btnQr) {
                 btnQr.classList.add('hidden-view');
+            }
+
+            // ซ่อน/แสดงไอคอนตารางเรียน (เฉพาะนักเรียนและผู้ปกครอง)
+            if ((role === 'student' || role === 'parent') && btnSchedule) {
+                btnSchedule.classList.remove('hidden-view');
+                // สั่งโหลดและคำนวณคาบเรียนปัจจุบันทันทีที่ล็อกอิน
+                loadCurrentPeriodBanner();
+            } else if (btnSchedule) {
+                btnSchedule.classList.add('hidden-view');
             }
 
             const perms = (systemSettings && systemSettings.permissions && systemSettings.permissions[role]) ? systemSettings.permissions[role] : null;
@@ -1576,10 +1633,12 @@
             
             // คำนวณจำนวนวิชาที่ติดและแก้ตัวแล้วจาก msDetails
             let remediatedAbsence = 0;
+            let atRiskCount = 0;
             let remCount = 0;
 
             if (data.msDetails && data.msDetails.length > 0) {
                 data.msDetails.forEach(subj => {
+                    atRiskCount++;
                     if (subj.remediated) {
                         remediatedAbsence += subj.count;
                         remCount++;
@@ -1587,7 +1646,7 @@
                 });
             }
             
-            // จำนวนครั้งที่ยังคงทำงานอยู่ (ยอดที่ยังไม่แก้) - จะเป็นตัวกำหนดความยาวของเส้นกราฟ
+            // จำนวนครั้งที่ยังคงทำงานอยู่ (ยังไม่แก้)
             const activeAbsence = Math.max(0, totalAbsence - remediatedAbsence);
 
             const msBadge = document.getElementById('ms-status-badge');
@@ -1597,36 +1656,55 @@
             const msDetailsContainer = document.getElementById('ms-details-container');
             const msDetailsList = document.getElementById('ms-details-list');
             
-            if (msBadge && msBar && msIcon) {
-                // คำนวณความกว้างจาก "ยอดที่ยังไม่ได้แก้" เท่านั้น เพื่อให้กราฟหดตัวลง
-                let activeProgressPercent = Math.min(100, (activeAbsence / 10) * 100); 
+            if (msBadge && msBar && msBarRemediated && msIcon) {
+                // คำนวณความกว้างตามสัดส่วน (รวมแล้วไม่เกิน 100%)
+                let totalPercent = Math.min(100, (totalAbsence / 10) * 100);
+                let remediatedProgressPercent = (remediatedAbsence / totalAbsence) * totalPercent || 0;
+                let activeProgressPercent = (activeAbsence / totalAbsence) * totalPercent || 0;
                 
-                // ปิดการแสดงผลของกราฟสีทองแบบต่อกัน (ให้ความกว้างเป็น 0)
-                if (msBarRemediated) msBarRemediated.style.width = '0%';
-                
-                // ให้เส้นกราฟหดตัวลงไปอยู่จุดปลอดภัย
+                // กำหนดความกว้างของเส้นกราฟให้แสดง 2 สีต่อกันเสมอ
+                msBarRemediated.style.width = remediatedProgressPercent + '%';
                 msBar.style.width = activeProgressPercent + '%';
 
-                if (activeAbsence >= 8) {
-                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
-                    msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
-                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
-                    msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
-                } else if (activeAbsence >= 4) {
-                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
-                    msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
-                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
-                    msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
-                } else {
-                    // ปลอดภัย (ต่ำกว่า 4 ครั้ง หรือ แก้จนยอดลดลงมาต่ำกว่า 4 แล้ว)
-                    if (remCount > 0) {
-                        // ถ้าปลอดภัยเพราะแก้ตัวมาแล้ว ให้เป็นสีเหลืองทอง
+                // กรณีที่ 1: แก้ตัวครบทุกวิชาที่เป็นกลุ่มเสี่ยง
+                if (atRiskCount > 0 && remCount === atRiskCount) {
+                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
+                    msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
+                    msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
+                    msBar.className = 'h-2.5 transition-all duration-700 bg-transparent';
+                } 
+                // กรณีที่ 2: มีการแก้ตัวบางวิชา (ยังมีที่ยังไม่ได้แก้)
+                else if (remediatedAbsence > 0) {
+                    if (activeAbsence >= 8) {
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
+                        msBadge.innerText = 'แก้บางส่วน (อันตราย)';
+                        msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
+                    } else if (activeAbsence >= 4) {
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
+                        msBadge.innerText = 'แก้บางส่วน (เสี่ยง)';
+                        msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
+                    } else {
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
                         msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
                         msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
+                    }
+                } 
+                // กรณีที่ 3: ไม่มีการแก้ตัวเลย (สถานะปกติ)
+                else {
+                    if (activeAbsence >= 8) {
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
+                        msBadge.innerText = 'แนวโน้มติด ม.ส.';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
+                        msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
+                    } else if (activeAbsence >= 4) {
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
+                        msBadge.innerText = 'มีความเสี่ยง';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
+                        msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
                     } else {
-                        // ปลอดภัยปกติ
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
                         msBadge.innerText = 'ปลอดภัย';
                         msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
@@ -1800,11 +1878,7 @@
                 apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
                     if (res.status === 'success' && res.data) {
                         localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                        // อัปเดต UI อีกครั้งหากเปิดหน้าเดิมอยู่
-                        if (!document.getElementById('detail-modal').classList.contains('hidden-view') && 
-                            document.getElementById('modal-title').innerText === titleMap[type]) {
-                            renderDetailModalUI(res.data);
-                        }
+                        renderDetailModalUI(res.data);
                     }
                 }).catch(e => {});
             } else {
@@ -1823,31 +1897,22 @@
             }
         }
 
-        // ออกแบบกล่องประวัติใหม่ เพื่อแยกการแสดงผลวันที่ และ คาบที่ ให้เด่นชัดเจน
+        // แยกฟังก์ชันการวาดหน้าต่างประวัติออกมา เพื่อให้เรียกใช้ได้ง่ายๆ
         function renderDetailModalUI(data) {
             if (data && data.length > 0) {
                 let html = '';
                 data.forEach((item, index) => {
-                    // กำหนดสีและแถบสัญลักษณ์ตามความรุนแรง
-                    const isAlert = item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') || item.status.includes('-');
-                    const colorClass = isAlert ? 'text-red-500' : 'text-ns-blue';
-                    const bgClass = isAlert ? 'bg-red-50' : 'bg-blue-50';
-                    const borderLeft = isAlert ? 'bg-red-400' : 'bg-ns-blue';
-
-                    html += `<div class="p-3 bg-white rounded-xl border border-gray-100 mb-3 text-sm shadow-sm relative overflow-hidden transition-all hover:shadow-md">
-                        <div class="absolute left-0 top-0 bottom-0 w-1 ${borderLeft}"></div>
-                        
-                        <div class="pl-2 flex justify-between items-center font-semibold text-gray-700 mb-2 border-b border-gray-50 pb-1.5">
-                            <span class="${colorClass} flex items-center gap-1.5"><i class="far fa-calendar-alt"></i> ${item.date}</span>
-                            <span class="${colorClass} ${bgClass} px-2 py-0.5 rounded-md text-xs border ${isAlert ? 'border-red-100' : 'border-blue-100'}">${item.status}</span>
+                    html += `<div class="p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2 text-sm">
+                        <div class="flex justify-between font-semibold text-gray-700 mb-1">
+                            <span><i class="far fa-calendar-alt mr-1"></i> ${item.date}</span>
+                            <span class="${item.status.includes('-') || item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') ? 'text-red-500' : 'text-ns-blue'}">${item.status}</span>
                         </div>
-                        
-                        <p class="pl-2 text-gray-600 text-xs sm:text-sm leading-relaxed">${item.detail}</p>
+                        <p class="text-gray-500">${item.detail}</p>
                     </div>`;
                 });
                 document.getElementById('modal-content').innerHTML = html;
             } else {
-                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-200"></i><p>ไม่พบประวัติข้อมูล</p></div>';
+                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
             }
         }
 
@@ -2326,8 +2391,7 @@
 
         async function executeClubChange() {
             document.getElementById('confirm-change-modal').classList.add('hidden-view');
-            closeChangeClubModal();
-            navApp('dashboard'); // พาไปหน้าสถิติทันที
+            showLoading();
             
             const club = clubDataList.find(c => c.id === newSelectedClubId);
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim(); 
@@ -2442,6 +2506,285 @@
             }
         });
 
+        // --- Schedule Logic (ระบบตารางเรียน) ---
+        async function loadCurrentPeriodBanner() {
+            if (!currentUser || currentUser.role === 'admin') return;
+            const u = currentUser.data;
+            if (!u.room || u.room === "-") return;
+            
+            const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
+            const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
+            let scheduleRes = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+            
+            if (!scheduleRes) {
+                try {
+                    scheduleRes = await apiCall('getSchedule', { room: u.room, studentId: cleanId });
+                    if (scheduleRes.status === 'success' || scheduleRes.status === 'missing_plan') {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(scheduleRes));
+                    }
+                } catch (e) {
+                    return;
+                }
+            }
+            
+            if (scheduleRes && scheduleRes.status === 'success' && scheduleRes.data) {
+                updateCurrentPeriodBannerUI(scheduleRes.data);
+                // ตั้งเวลาตรวจสอบการเปลี่ยนคาบเรียนทุกๆ 1 นาที
+                setInterval(() => updateCurrentPeriodBannerUI(scheduleRes.data), 60000); 
+            }
+        }
+
+        async function openScheduleModal() {
+            if (!currentUser) return;
+            const u = currentUser.data;
+            document.getElementById('schedule-modal').classList.remove('hidden-view');
+            document.getElementById('schedule-room-title').innerText = u.room || "-";
+            
+            const contentDiv = document.getElementById('schedule-content');
+            contentDiv.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลตารางเรียน...</p></div>';
+
+            try {
+                const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
+                const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
+                
+                // โหลดจาก Cache เพื่อความรวดเร็ว
+                let res = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+                
+                if (!res) {
+                    res = await apiCall('getSchedule', { room: u.room, studentId: cleanId });
+                    if (res.status === 'success' || res.status === 'missing_plan') {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(res));
+                    }
+                }
+                
+                if (res.status === 'success') {
+                    const planText = res.studyPlan && res.studyPlan !== "-" ? res.studyPlan : "ทั่วไป";
+                    document.getElementById('schedule-room-title').innerText = `${u.room} | แผน: ${planText}`;
+                    renderScheduleUI(res.data);
+                } else if (res.status === 'missing_plan') {
+                    contentDiv.innerHTML = `
+                        <div class="text-center py-12 px-4 flex flex-col items-center justify-center h-full">
+                            <div class="w-24 h-24 bg-gradient-to-br from-orange-100 to-red-50 text-ns-orange rounded-full flex items-center justify-center text-4xl mb-5 shadow-inner border border-orange-200">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">ไม่พบข้อมูลแผนการเรียน</h3>
+                            <p class="text-sm text-gray-600 mb-8 leading-relaxed max-w-sm">
+                                นักเรียนยังไม่กรอกข้อมูลขึ้นทะเบียนนักเรียนในระบบ ทำให้ไม่สามารถดึงตารางเรียนที่ตรงกับแผนการเรียนของคุณได้
+                            </p>
+                            <a href="https://krutaskeen-max.github.io/-/" target="_blank" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-ns-orange to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 w-full sm:w-auto">
+                                <i class="fas fa-external-link-alt"></i> ไปกรอกข้อมูลขึ้นทะเบียน
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    contentDiv.innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>${res.message || 'ไม่พบข้อมูลตารางเรียน'}</p></div>`;
+                }
+            } catch (error) {
+                contentDiv.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-wifi text-3xl mb-3"></i><p>เกิดข้อผิดพลาดในการเชื่อมต่อ</p></div>';
+            }
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.add('hidden-view');
+        }
+
+        window.switchScheduleDay = function(day) {
+            document.querySelectorAll('.schedule-day-tab').forEach(el => {
+                if (el.dataset.day === day) {
+                    el.classList.remove('bg-gray-100', 'text-gray-600');
+                    el.classList.add('bg-ns-blue', 'text-white', 'shadow-md');
+                } else {
+                    el.classList.add('bg-gray-100', 'text-gray-600');
+                    el.classList.remove('bg-ns-blue', 'text-white', 'shadow-md');
+                }
+            });
+            document.querySelectorAll('.schedule-day-content').forEach(el => {
+                if (el.dataset.day === day) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        };
+
+        function renderScheduleUI(data) {
+            const contentDiv = document.getElementById('schedule-content');
+            if (!data || data.length === 0) {
+                contentDiv.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i><p>ไม่พบตารางเรียนสำหรับห้องนี้</p></div>';
+                return;
+            }
+
+            // จัดกลุ่มตามวัน
+            const scheduleByDay = {};
+            const daysOrder = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"];
+            
+            data.forEach(item => {
+                if (!scheduleByDay[item.day]) scheduleByDay[item.day] = [];
+                
+                // จัดการครูหลายคนในคาบและวิชาเดียวกัน
+                const existing = scheduleByDay[item.day].find(x => x.period === item.period && x.code === item.code);
+                if (existing) {
+                    if (!existing.teacher.includes(item.teacher) && item.teacher !== "-" && item.teacher !== "") {
+                        existing.teacher += ", " + item.teacher;
+                    }
+                } else {
+                    scheduleByDay[item.day].push(item);
+                }
+            });
+
+            // --- คำนวณวันและเวลาปัจจุบันเพื่อไฮไลต์ ---
+            const now = new Date();
+            const daysMap = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+            const currentDayStr = daysMap[now.getDay()];
+            
+            const scheduleConfig = { duration: 50, startHour: 8, startMin: 20, break_period: 5, break_duration: 70 };
+            const startMins = (scheduleConfig.startHour * 60) + scheduleConfig.startMin; 
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+
+            let currentPeriod = -1;
+
+            if (currentMins >= startMins) {
+                const elapsedMins = currentMins - startMins; 
+                const minsBeforeBreak = (scheduleConfig.break_period - 1) * scheduleConfig.duration; 
+
+                if (elapsedMins < minsBeforeBreak) {
+                    currentPeriod = Math.floor(elapsedMins / scheduleConfig.duration) + 1;
+                } else if (elapsedMins >= minsBeforeBreak && elapsedMins < minsBeforeBreak + scheduleConfig.break_duration) {
+                    currentPeriod = -1; 
+                } else {
+                    const afterBreakElapsed = elapsedMins - (minsBeforeBreak + scheduleConfig.break_duration);
+                    currentPeriod = Math.floor(afterBreakElapsed / scheduleConfig.duration) + scheduleConfig.break_period;
+                }
+            }
+
+            // กำหนดให้หน้าแรกเปิดแท็บของ "วันนี้" (ถ้าวันนี้มีเรียน) ถ้าไม่มีให้เปิด "วันจันทร์"
+            let activeDay = scheduleByDay[currentDayStr] ? currentDayStr : "จันทร์";
+
+            let html = '<div class="w-full">';
+            
+            // 1. วาดส่วนของแถบเมนูด้านบน (Tabs)
+            html += '<div class="flex overflow-x-auto gap-2 pb-3 mb-4" style="scrollbar-width: none; -ms-overflow-style: none;">';
+            daysOrder.forEach(day => {
+                if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
+                    const isActive = day === activeDay;
+                    const btnClass = isActive ? 'bg-ns-blue text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+                    // ใส่จุดสีส้มเล็กๆ มาร์คว่าเป็น "วันนี้"
+                    const todayIndicator = day === currentDayStr ? '<div class="w-2 h-2 rounded-full bg-ns-orange absolute -top-0.5 -right-0.5 shadow-sm border border-white animate-pulse"></div>' : '';
+                    
+                    html += `
+                        <button onclick="switchScheduleDay('${day}')" data-day="${day}" class="schedule-day-tab relative px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${btnClass}">
+                            วัน${day} ${todayIndicator}
+                        </button>
+                    `;
+                }
+            });
+            html += '</div>';
+            
+            // 2. วาดส่วนของรายการคาบเรียนในแต่ละวัน (Content)
+            daysOrder.forEach(day => {
+                if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
+                    const isHidden = day === activeDay ? '' : 'hidden';
+                    html += `<div data-day="${day}" class="schedule-day-content ${isHidden} space-y-3 pb-4">`;
+                    
+                    scheduleByDay[day].sort((a, b) => a.period - b.period);
+                    
+                    scheduleByDay[day].forEach(subj => {
+                        // ไฮไลต์คาบปัจจุบัน (ต้องเป็นวันนี้ และเวลาตรงกับคาบนี้)
+                        const isCurrentPeriod = (day === currentDayStr && subj.period === currentPeriod);
+                        
+                        const cardStyle = isCurrentPeriod 
+                            ? 'bg-orange-50 border-ns-orange ring-2 ring-orange-200 shadow-md transform scale-[1.02] transition-transform' 
+                            : 'bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow';
+                            
+                        const periodBoxStyle = isCurrentPeriod 
+                            ? 'bg-ns-orange text-white border-ns-orange shadow-inner' 
+                            : 'bg-gray-50 text-gray-700 border-gray-200';
+                            
+                        // ไอคอนกระพริบสำหรับคาบปัจจุบัน
+                        const pulsingBadge = isCurrentPeriod 
+                            ? '<span class="absolute top-3 right-3 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-ns-orange"></span></span>' 
+                            : '';
+
+                        html += `
+                            <div class="relative p-3 rounded-2xl border ${cardStyle} flex items-center gap-3 overflow-hidden">
+                                ${pulsingBadge}
+                                <div class="w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border ${periodBoxStyle}">
+                                    <span class="text-[9px] font-medium opacity-80 -mb-1">คาบ</span>
+                                    <span class="font-bold text-lg leading-tight">${subj.period}</span>
+                                </div>
+                                <div class="flex-1 min-w-0 pr-4">
+                                    <h4 class="font-bold text-sm text-gray-800 leading-tight truncate ${isCurrentPeriod ? 'text-ns-orange' : ''}">${subj.code} ${subj.name}</h4>
+                                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[10px] text-gray-500">
+                                        <span class="flex items-center gap-1 ${isCurrentPeriod ? 'text-orange-700 font-medium' : ''}"><i class="fas fa-chalkboard-teacher opacity-70"></i> ${subj.teacher || '-'}</span>
+                                        <span class="flex items-center gap-1 ${isCurrentPeriod ? 'text-orange-700 font-medium' : ''}"><i class="fas fa-map-marker-alt opacity-70 text-ns-blue"></i> ${subj.location || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                }
+            });
+            
+            html += '</div>';
+            contentDiv.innerHTML = html;
+        }
+
+        function updateCurrentPeriodBannerUI(data) {
+            const banner = document.getElementById('current-period-banner');
+            if (!banner || !data || data.length === 0) return;
+            
+            const now = new Date();
+            const daysMap = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+            const currentDayStr = daysMap[now.getDay()];
+            
+            // ตั้งค่าเวลามาตรฐานของโรงเรียน
+            const scheduleConfig = { duration: 50, startHour: 8, startMin: 20, break_period: 5, break_duration: 70 };
+            const startMins = (scheduleConfig.startHour * 60) + scheduleConfig.startMin;
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+
+            let currentPeriod = -1;
+
+            // ตรวจสอบว่าถึงเวลาเรียนหรือยัง
+            if (currentMins >= startMins) {
+                const elapsedMins = currentMins - startMins;
+                const minsBeforeBreak = (scheduleConfig.break_period - 1) * scheduleConfig.duration; 
+
+                if (elapsedMins < minsBeforeBreak) {
+                    currentPeriod = Math.floor(elapsedMins / scheduleConfig.duration) + 1;
+                } else if (elapsedMins >= minsBeforeBreak && elapsedMins < minsBeforeBreak + scheduleConfig.break_duration) {
+                    currentPeriod = -1; // อยู่ในช่วงพัก
+                } else {
+                    const afterBreakElapsed = elapsedMins - (minsBeforeBreak + scheduleConfig.break_duration);
+                    currentPeriod = Math.floor(afterBreakElapsed / scheduleConfig.duration) + scheduleConfig.break_period;
+                }
+            }
+            
+            // ค้นหาวิชาปัจจุบัน
+            if (currentPeriod > 0) {
+                 const todaysSchedule = data.filter(item => item.day === currentDayStr);
+                 const matched = todaysSchedule.filter(item => item.period === currentPeriod);
+                 
+                 if (matched.length > 0) {
+                     let currentSubj = { ...matched[0] };
+                     // หากคาบเดียวกันมีหลายวิชา/ครูหลายคน ให้เชื่อมชื่อครูเข้าด้วยกัน
+                     if (matched.length > 1) {
+                         const teachers = matched.map(m => m.teacher).filter(t => t && t !== '-');
+                         const uniqueTeachers = [...new Set(teachers)];
+                         currentSubj.teacher = uniqueTeachers.join(', ');
+                     }
+                     
+                     document.getElementById('current-period-subject').innerText = currentSubj.code + " " + currentSubj.name;
+                     document.getElementById('current-period-teacher').innerText = currentSubj.teacher || '-';
+                     document.getElementById('current-period-location').innerText = currentSubj.location || '-';
+                     document.getElementById('current-period-time').innerText = currentPeriod;
+                     
+                     banner.classList.remove('hidden-view');
+                     return;
+                 }
+            }
+            // หากไม่เจอคาบเรียน ณ เวลานี้ ให้ซ่อนแบนเนอร์
+            banner.classList.add('hidden-view');
+        }
+
         async function saveSettings() {
             showLoading();
             const payload = {
@@ -2450,7 +2793,6 @@
                 logoUrl: document.getElementById('logo-base64').value, 
                 clubStartDate: document.getElementById('setting-club-start').value,
                 clubEndDate: document.getElementById('setting-club-end').value,
-                isOpenClub: document.getElementById('setting-club-status').checked, // ดึงสถานะเปิดปิดชุมนุม
                 allowChangeClub: document.getElementById('setting-allow-change-club').checked ? "อนุญาต" : "ไม่อนุญาต",
                 showAnnouncement: document.getElementById('setting-show-announcement').checked,
                 announcementText: document.getElementById('setting-announcement-text').value,
