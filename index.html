@@ -578,24 +578,11 @@
 
                 <!-- VIEW: CLUB (ชุมนุม) -->
                 <div id="view-club" class="app-section hidden-view space-y-4">
-                    <div class="flex justify-between items-center mb-3 gap-2">
-                        <div class="flex items-center gap-3">
-                            <button onclick="navApp('dashboard')" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:bg-gray-900 transition-all active:scale-95 shrink-0">
-                                <i class="fas fa-home text-sm"></i>
-                                <span class="text-xs font-bold">กลับไปหน้าหลัก</span>
-                            </button>
-                            <div class="border-l-4 border-purple-500 pl-2 hidden sm:block">
-                                <h2 class="text-lg font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
-                            </div>
-                        </div>
-                        <button onclick="forceRefreshClubs()" class="flex items-center gap-1.5 text-[10px] sm:text-xs text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-2 rounded-xl border border-purple-200 shadow-sm transition-all active:scale-95 shrink-0">
-                            <i class="fas fa-sync-alt" id="icon-refresh-clubs"></i> <span class="hidden sm:inline font-medium">อัปเดตข้อมูล</span>
+                    <div class="flex justify-between items-center border-l-4 border-purple-500 pl-2 mb-2">
+                        <h2 class="text-lg font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
+                        <button onclick="forceRefreshClubs()" class="flex items-center gap-1 text-[10px] sm:text-xs text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg border border-purple-200 shadow-sm transition-all active:scale-95">
+                            <i class="fas fa-sync-alt" id="icon-refresh-clubs"></i> อัปเดตข้อมูล
                         </button>
-                    </div>
-                    
-                    <!-- หัวข้อแสดงผลสำหรับหน้าจอมือถือโดยเฉพาะเพื่อไม่ให้เบียดกับปุ่ม -->
-                    <div class="border-l-4 border-purple-500 pl-2 sm:hidden mb-2">
-                        <h2 class="text-base font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
                     </div>
                     
                     <div id="club-list-body" class="grid grid-cols-1 gap-4 pb-4">
@@ -999,7 +986,7 @@
                         localStorage.setItem(`ns_stat_details_${cleanId}_${type}`, JSON.stringify(res.data));
                     }
                     // หน่วงเวลาเล็กน้อยให้ Apps Script ได้พักหายใจ ป้องกัน Error
-                    await new Promise(r => setTimeout(r, 200)); 
+                    await new Promise(r => setTimeout(r, 500)); 
                 } catch(e) { console.log(`Preload details ${type} skipped`); }
             }
             isPreloadingDetails = false;
@@ -1077,6 +1064,7 @@
                 }
             } catch (error) { 
                 console.warn('ไม่สามารถโหลดการตั้งค่าได้ ใช้แคชเดิมหากมี', error); 
+                // document.getElementById('school-name-login').innerText = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
             }
         }
 
@@ -1233,9 +1221,7 @@
             }
         }
 
-        // เพิ่มฟังก์ชันสำหรับเปิดลิงก์เพิ่มเพื่อน
         function addSchoolLineFriend() {
-            // ดึงลิงก์จากที่แอดมินตั้งค่าไว้ หรือใช้ค่าเริ่มต้นถ้าไม่ได้ตั้ง
             const lineLink = (systemSettings && systemSettings.lineLink) ? systemSettings.lineLink : "";
             if(lineLink && lineLink !== "") {
                 window.open(lineLink, '_blank');
@@ -1319,8 +1305,6 @@
                 const res = await apiCall('login', { u: u, p: p });
 
                 if(res.status === 'success') {
-                    sessionStorage.clear(); 
-                    
                     if(rem) localStorage.setItem('ns_username', u);
                     else localStorage.removeItem('ns_username');
                     
@@ -1354,6 +1338,13 @@
                         navApp('admin'); 
                     } else {
                         navApp('dashboard'); 
+                        
+                        // สุ่มหน่วงเวลารับส่งสถิติเบื้องหลัง เพื่อสเปรดโหลดคิวพร้อมกันของ 3,000 คน
+                        setTimeout(() => {
+                            const perms = systemSettings?.permissions?.[res.role];
+                            if (perms && perms.club) fetchClubsSilent();
+                            preloadStatDetailsSilent(res.data.id);
+                        }, 2000 + Math.random() * 3000);
                     }
                 } else {
                     showAlert('เข้าระบบไม่สำเร็จ', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
@@ -1409,7 +1400,6 @@
             // ซ่อน/แสดงไอคอนตารางเรียน (เฉพาะนักเรียนและผู้ปกครอง)
             if ((role === 'student' || role === 'parent') && btnSchedule) {
                 btnSchedule.classList.remove('hidden-view');
-                // โหลด คาบเรียนปัจจุบัน ทันทีที่เข้าสู่ระบบ
                 loadCurrentPeriodBanner();
             } else if (btnSchedule) {
                 btnSchedule.classList.add('hidden-view');
@@ -1472,12 +1462,13 @@
             if (dashInterval) clearInterval(dashInterval);
             if (clubInterval) clearInterval(clubInterval);
 
+            // ปรับแต่ง Timer เป็น 30 วินาที เพื่อจำกัดการเข้าชมพร้อมกันของ 3,000+ ผู้ใช้ (High Concurrency Optimizations)
             if (target === 'dashboard') {
                 loadStats();
-                dashInterval = setInterval(fetchStatsSilent, 5000); // ตั้งเวลารีดแคชเบื้องหลังทุก 5 วินาที
+                dashInterval = setInterval(fetchStatsSilent, 30000); 
             } else if (target === 'club') {
                 loadClubs(); 
-                clubInterval = setInterval(fetchClubsSilent, 5000); // ตั้งเวลารีดแคชเบื้องหลังทุก 5 วินาที
+                clubInterval = setInterval(fetchClubsSilent, 45000); 
             } else if (target === 'admin') {
                 loadAdminSettings(); 
             }
@@ -1505,7 +1496,7 @@
                 } else {
                     document.getElementById('dash-sync-time').innerText = "ข้อมูลแคชเดิม";
                 }
-                fetchStatsSilent(); // เรียกเบื้องหลังโดยไม่บล็อกหน้าจอ
+                fetchStatsSilent(); // เรียกเก็บเบื้องหลังเงียบๆ ไม่ต้องแสดงหน้าจอโหลด
             } else {
                 if(currentUser.role !== 'admin') {
                     document.getElementById('stat-scan').innerHTML = '<i class="fas fa-spinner fa-spin text-gray-300"></i>';
@@ -1531,7 +1522,6 @@
 
         let isFetchingStats = false; 
 
-        // ดึงข้อมูลใหม่เงียบๆ เบื้องหลัง (Silent Polling) ทุก 5 วินาที
         async function fetchStatsSilent() {
             if (!currentUser || currentUser.role === 'admin' || isFetchingStats) return;
             isFetchingStats = true;
@@ -1555,7 +1545,7 @@
                     updateSyncTime('dash-sync-time');
                 }
             } catch (e) {
-                console.log("Silent update stats error:", e);
+                console.log("Background refresh silent update skipped smoothly.");
             } finally {
                 isFetchingStats = false;
             }
@@ -1663,53 +1653,49 @@
             const msDetailsList = document.getElementById('ms-details-list');
             
             if (msBadge && msBar && msIcon) {
-                let totalPercent = Math.min(100, (totalAbsence / 10) * 100);
-                let remediatedProgressPercent = (remediatedAbsence / totalAbsence) * totalPercent || 0;
-                let activeProgressPercent = (activeAbsence / totalAbsence) * totalPercent || 0;
+                // อัตราการแก้ตัว: ลดระดับลงตามอัตราส่วนการดำเนินแก้ตัว ม.ส. อย่างเห็นภาพ
+                let activeProgressPercent = Math.min(100, (activeAbsence / 10) * 100); 
+                let remediatedProgressPercent = Math.min(100 - activeProgressPercent, (remediatedAbsence / 10) * 100);
                 
                 if (msBarRemediated) msBarRemediated.style.width = remediatedProgressPercent + '%';
                 msBar.style.width = activeProgressPercent + '%';
 
-                if (atRiskCount > 0 && remCount === atRiskCount) {
+                if (activeAbsence === 0 && remediatedAbsence > 0) {
+                    if (msBarRemediated) msBarRemediated.style.width = '0%';
+                    msBar.style.width = '0%';
+
                     msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
                     msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
                     msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
-                    msBar.className = 'h-2.5 transition-all duration-700 bg-transparent';
-                } 
-                else if (remediatedAbsence > 0) {
-                    if (activeAbsence >= 8) {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
-                        msBadge.innerText = 'แก้บางส่วน (อันตราย)';
-                        msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
-                    } else if (activeAbsence >= 4) {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
-                        msBadge.innerText = 'แก้บางส่วน (เสี่ยง)';
-                        msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
-                    } else {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
-                        msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
-                        msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
+                } else {
+                    if (msBarRemediated) {
+                        msBarRemediated.style.width = remediatedProgressPercent + '%';
+                        msBarRemediated.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
                     }
-                } 
-                else {
+                    msBar.style.width = activeProgressPercent + '%';
+
                     if (activeAbsence >= 8) {
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
-                        msBadge.innerText = 'แนวโน้มติด ม.ส.';
+                        msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
                         msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
                         msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
                     } else if (activeAbsence >= 4) {
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
-                        msBadge.innerText = 'มีความเสี่ยง';
+                        msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
                         msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
                         msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
                     } else {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
-                        msBadge.innerText = 'ปลอดภัย';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
-                        msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
+                        if (remCount > 0) {
+                            msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
+                            msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
+                            msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
+                            msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
+                        } else {
+                            msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
+                            msBadge.innerText = 'ปลอดภัย';
+                            msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
+                            msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
+                        }
                     }
                 }
 
@@ -1871,7 +1857,6 @@
             if (cachedData) {
                 renderDetailModalUI(JSON.parse(cachedData));
                 
-                // ดึงอัปเดตเบื้องหลัง
                 apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
                     if (res.status === 'success' && res.data) {
                         localStorage.setItem(cacheKey, JSON.stringify(res.data));
@@ -2089,7 +2074,7 @@
             }
 
             const cacheKey = 'ns_club_list_data';
-            const cachedData = localStorage.getItem(cacheKey);
+            const cachedData = sessionStorage.getItem(cacheKey);
             
             if (cachedData) {
                 renderClubsUI(JSON.parse(cachedData), true);
@@ -2101,7 +2086,7 @@
                     if (!currentUser) return; 
 
                     if(res.status === 'success') {
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
                         renderClubsUI(res.data, false);
                     }
                 } catch(e) {}
@@ -2114,7 +2099,7 @@
                 const res = await apiCall('getClubs', {});
                 if(res.status === 'success' && currentUser) {
                     const cacheKey = 'ns_club_list_data';
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
                     renderClubsUI(res.data, false);
                 }
             } catch (e) { }
@@ -2342,7 +2327,7 @@
                     document.getElementById('change-club-list-body').innerHTML = html;
                 }
             } catch(e) {
-                document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-red-500"><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
+                document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-red-500"><p>เกิดข้อผิดพลาดในการโหลดข้อมูล...</p></div>';
             }
         }
         
@@ -2358,8 +2343,7 @@
 
         async function executeClubChange() {
             document.getElementById('confirm-change-modal').classList.add('hidden-view');
-            closeChangeClubModal();
-            navApp('dashboard'); 
+            showLoading();
             
             const club = clubDataList.find(c => c.id === newSelectedClubId);
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim(); 
@@ -2420,75 +2404,7 @@
             });
         }
 
-        document.getElementById('set-logo-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader(); 
-                reader.onload = function(evt) {
-                    const img = new Image(); 
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas'); 
-                        const maxSize = 150; 
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > maxSize) {
-                                height *= maxSize / width;
-                                width = maxSize;
-                            }
-                        } else {
-                            if (height > maxSize) {
-                                width *= maxSize / height;
-                                height = maxSize;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d'); 
-                        
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const base64Str = canvas.toDataURL('image/webp', 0.8); 
-                        
-                        document.getElementById('setting-logo-preview').src = base64Str; 
-                        document.getElementById('setting-logo-preview').classList.remove('hidden'); 
-                        document.getElementById('logo-base64').value = base64Str;
-                    }; 
-                    img.src = evt.target.result;
-                }; 
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // --- Schedule Logic & Polling Period Banner ---
-        async function loadCurrentPeriodBanner() {
-            if (!currentUser || currentUser.role === 'admin') return;
-            const u = currentUser.data;
-            if (!u.room || u.room === "-") return;
-            
-            const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
-            const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
-            let scheduleRes = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-            
-            if (!scheduleRes) {
-                try {
-                    scheduleRes = await apiCall('getSchedule', { room: u.room, studentId: cleanId });
-                    if (scheduleRes.status === 'success' || scheduleRes.status === 'missing_plan') {
-                        sessionStorage.setItem(cacheKey, JSON.stringify(scheduleRes));
-                    }
-                } catch (e) {
-                    return;
-                }
-            }
-            
-            if (scheduleRes && scheduleRes.status === 'success' && scheduleRes.data) {
-                updateCurrentPeriodBannerUI(scheduleRes.data);
-                setInterval(() => updateCurrentPeriodBannerUI(scheduleRes.data), 15000); 
-            }
-        }
-
+        // --- Schedule Logic (ระบบตารางเรียนรายวันแดชบอร์ด) ---
         async function openScheduleModal() {
             if (!currentUser) return;
             const u = currentUser.data;
@@ -2581,6 +2497,7 @@
                 }
             });
 
+            // หาคาบเรียนปัจจุบันแบบเรียลไทม์
             const now = new Date();
             const daysMap = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
             const currentDayStr = daysMap[now.getDay()];
@@ -2609,6 +2526,7 @@
 
             let html = '<div class="w-full">';
             
+            // เมนูแท็บแถวบนสุดสำหรับเลือกวัน
             html += '<div class="flex overflow-x-auto gap-2 pb-3 mb-4" style="scrollbar-width: none; -ms-overflow-style: none;">';
             daysOrder.forEach(day => {
                 if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
@@ -2625,6 +2543,7 @@
             });
             html += '</div>';
             
+            // แสดงข้อมูลตารางทีละวันตามแท็บที่เลือก
             daysOrder.forEach(day => {
                 if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
                     const isHidden = day === activeDay ? '' : 'hidden';
@@ -2652,7 +2571,7 @@
                                 ${pulsingBadge}
                                 <div class="w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border ${periodBoxStyle}">
                                     <span class="text-[9px] font-medium opacity-80 -mb-1">คาบ</span>
-                                    <span class="font-bold text-lg leading-tight">${subj.period}</span>
+                                    <span class="font-bold text-lg">${subj.period}</span>
                                 </div>
                                 <div class="flex-1 min-w-0 pr-4">
                                     <h4 class="font-bold text-sm text-gray-800 leading-tight truncate ${isCurrentPeriod ? 'text-ns-orange' : ''}">${subj.code} ${subj.name}</h4>
@@ -2671,6 +2590,32 @@
             
             html += '</div>';
             contentDiv.innerHTML = html;
+        }
+
+        async function loadCurrentPeriodBanner() {
+            if (!currentUser || currentUser.role === 'admin') return;
+            const u = currentUser.data;
+            if (!u.room || u.room === "-") return;
+            
+            const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
+            const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
+            let scheduleRes = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+            
+            if (!scheduleRes) {
+                try {
+                    scheduleRes = await apiCall('getSchedule', { room: u.room, studentId: cleanId });
+                    if (scheduleRes.status === 'success' || scheduleRes.status === 'missing_plan') {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(scheduleRes));
+                    }
+                } catch (e) {
+                    return;
+                }
+            }
+            
+            if (scheduleRes && scheduleRes.status === 'success' && scheduleRes.data) {
+                updateCurrentPeriodBannerUI(scheduleRes.data);
+                setInterval(() => updateCurrentPeriodBannerUI(scheduleRes.data), 15000); 
+            }
         }
 
         function updateCurrentPeriodBannerUI(data) {
@@ -2724,6 +2669,48 @@
             }
             banner.classList.add('hidden-view');
         }
+
+        document.getElementById('set-logo-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader(); 
+                reader.onload = function(evt) {
+                    const img = new Image(); 
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas'); 
+                        const maxSize = 150; 
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height *= maxSize / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width *= maxSize / height;
+                                height = maxSize;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d'); 
+                        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const base64Str = canvas.toDataURL('image/webp', 0.8); 
+                        
+                        document.getElementById('setting-logo-preview').src = base64Str; 
+                        document.getElementById('setting-logo-preview').classList.remove('hidden'); 
+                        document.getElementById('logo-base64').value = base64Str;
+                    }; 
+                    img.src = evt.target.result;
+                }; 
+                reader.readAsDataURL(file);
+            }
+        });
 
         async function saveSettings() {
             showLoading();
