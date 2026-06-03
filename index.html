@@ -74,6 +74,7 @@
     <div id="view-login" class="absolute inset-0 overflow-y-auto flex flex-col justify-center items-center p-4 bg-gradient-to-br from-blue-50 to-orange-50">
         <div class="glass-panel w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/50 my-auto">
             <div class="text-center mb-8">
+                <!-- แก้ไขโลโก้: นำกรอบวงกลมออก ปรับขนาดให้เหมาะสม และป้องกันภาพผิดสัดส่วน -->
                 <div class="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-4 flex items-center justify-center">
                     <img id="main-logo" src="https://ui-avatars.com/api/?name=NS&background=1E3A8A&color=fff&size=150" alt="Logo" class="max-w-full max-h-full object-contain drop-shadow-md transition-transform hover:scale-105">
                 </div>
@@ -114,13 +115,14 @@
                 </button>
             </form>
 
-            <div class="hidden mt-8 text-center border-t pt-6 border-gray-200">
+            <div class="mt-8 text-center border-t pt-6 border-gray-200 hidden-view">
                 <p class="text-sm text-gray-600 mb-2">สำหรับผู้ปกครองที่ยังไม่มีบัญชี</p>
                 <button onclick="switchView('view-register')" class="text-ns-orange font-semibold hover:underline">
                     ลงทะเบียนผู้ปกครอง
                 </button>
             </div>
             
+            <!-- เพิ่มเครดิตหน้า Login -->
             <div class="mt-6 text-center">
                 <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Powered by taskeen @narasikkhalai</p>
             </div>
@@ -257,6 +259,7 @@
                     <p class="text-sm text-gray-600 mb-6">เพื่อให้ระบบสามารถส่งข้อความแจ้งเตือนถึงคุณได้ กรุณาเพิ่มเพื่อนและเชื่อมต่อบัญชี</p>
                     
                     <div class="space-y-3">
+                        <!-- ปุ่มใหม่: ดึงลิงก์จากตั้งค่าระบบมาเปิดเพื่อเพิ่มเพื่อน -->
                         <button type="button" onclick="addSchoolLineFriend()" class="bg-white text-[#00B900] border-2 border-[#00B900] px-6 py-3 rounded-xl font-bold hover:bg-green-50 w-full flex items-center justify-center gap-2 transition-all">
                             <i class="fas fa-user-plus text-xl"></i> 1. กดเพิ่มเพื่อนโรงเรียน
                         </button>
@@ -271,9 +274,11 @@
                 </div>
             </div>
 
+            <!-- เพิ่มเครดิตหน้า Register -->
             <div class="mt-6 text-center">
                 <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Powered by taskeen @narasikkhalai</p>
             </div>
+
         </div>
     </div>
 
@@ -291,12 +296,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 ml-2 shrink-0">
+                <!-- เพิ่มปุ่ม QR Code -->
                 <button id="btn-show-qr" onclick="openQrModal()" class="hidden-view text-ns-blue hover:text-blue-600 p-2.5 sm:p-3 bg-blue-50 rounded-full hover:bg-blue-100 transition shadow-sm">
                     <i class="fas fa-qrcode text-lg"></i>
-                </button>
-                <button id="btn-show-schedule" onclick="openScheduleModal()" class="hidden-view flex items-center gap-1.5 text-ns-blue hover:text-blue-700 px-3 py-2 sm:px-4 sm:py-2 bg-blue-50 rounded-full hover:bg-blue-100 transition shadow-sm font-bold text-xs sm:text-sm border border-blue-100" title="ตารางเรียน">
-                    <i class="fas fa-calendar-alt text-lg"></i>
-                    <span>ตารางเรียน</span>
                 </button>
                 <button onclick="logout()" class="text-gray-400 hover:text-red-500 p-2.5 sm:p-3 bg-gray-50 rounded-full hover:bg-red-50 transition shadow-sm">
                     <i class="fas fa-sign-out-alt text-lg"></i>
@@ -310,30 +312,6 @@
                 <!-- VIEW: DASHBOARD (STATISTICS) -->
                 <div id="view-dashboard" class="app-section space-y-4">
                     
-                    <!-- แบนเนอร์แสดงคาบเรียนปัจจุบัน (จะแสดงเฉพาะตอนมีเรียน) -->
-                    <div id="current-period-banner" class="hidden-view bg-ns-orange border-2 border-ns-blue rounded-2xl p-4 shadow-lg relative overflow-hidden mt-1 mb-2">
-                        <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-full border border-white/30 backdrop-blur-sm">
-                            <span class="relative flex h-2 w-2">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                            </span>
-                            <span class="text-[9px] font-bold text-white tracking-widest uppercase">กำลังเรียน</span>
-                        </div>
-                        <div class="relative z-10 flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white text-ns-orange rounded-xl flex flex-col items-center justify-center font-bold shadow-inner shrink-0 border border-orange-100">
-                                <span class="text-[9px] uppercase tracking-wider opacity-80 -mb-1">คาบ</span>
-                                <span id="current-period-time" class="text-xl leading-none">-</span>
-                            </div>
-                            <div class="flex-1 text-white pr-16">
-                                <h3 id="current-period-subject" class="text-base sm:text-lg font-bold leading-tight drop-shadow-md truncate">-</h3>
-                                <div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] sm:text-xs font-medium text-orange-50">
-                                    <span class="flex items-center gap-1"><i class="fas fa-chalkboard-teacher opacity-80"></i> <span id="current-period-teacher">-</span></span>
-                                    <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt opacity-80"></i> <span id="current-period-location">-</span></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="flex flex-col mt-1 gap-2">
                         <div class="flex justify-between items-center border-l-4 border-ns-orange pl-2">
                             <h2 class="text-lg font-bold text-gray-800">สถิติและพฤติกรรม</h2>
@@ -343,6 +321,7 @@
                             </button>
                         </div>
                         
+                        <!-- ข้อความแจ้งเตือนให้อัปเดตข้อมูล -->
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2.5 flex items-start gap-2 shadow-sm">
                             <i class="fas fa-info-circle text-yellow-600 mt-0.5 text-sm"></i>
                             <p class="text-[10px] sm:text-[11px] text-yellow-800 leading-tight">
@@ -422,7 +401,7 @@
                             </div>
                         </div>
 
-                        <!-- การ์ดวิเคราะห์แนวโน้ม ม.ส. -->
+                        <!-- เพิ่มการ์ดวิเคราะห์แนวโน้ม ม.ส. ตรงนี้ -->
                         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative overflow-hidden sm:col-span-3">
                             <div class="flex justify-between items-center mb-3">
                                 <div class="flex items-center gap-2">
@@ -432,6 +411,7 @@
                                 <span id="ms-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 shadow-sm">กำลังประมวลผล</span>
                             </div>
                             <p class="text-[11px] text-gray-500 mb-2">ประเมินความเสี่ยงจากสถิติ "ขาดเรียน" และ "หนีเรียน" รวมกัน</p>
+                            <!-- เปลี่ยนเส้นกราฟให้สามารถแสดง 2 สีต่อกันได้ (สีทองสำหรับวิชาที่แก้ตัวแล้ว / สีแดงสำหรับวิชาที่ยังไม่แก้) -->
                             <div class="w-full bg-gray-100 rounded-full h-2.5 mt-1 overflow-hidden shadow-inner flex">
                                 <div id="ms-progress-remediated" class="h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500" style="width: 0%"></div>
                                 <div id="ms-progress-bar" class="h-2.5 transition-all duration-700 bg-gray-400" style="width: 0%"></div>
@@ -442,9 +422,12 @@
                                 <span class="text-red-400">อันตราย (8+)</span>
                             </div>
                             
+                            <!-- พื้นที่แสดงรายการวิชาที่มีแนวโน้ม ม.ส. -->
                             <div id="ms-details-container" class="hidden-view mt-4 pt-3 border-t border-red-100 bg-red-50/40 rounded-b-2xl -mx-4 -mb-4 px-4 pb-4">
                                 <p class="text-xs font-bold text-gray-700 mb-2"><i class="fas fa-list-ol text-ns-orange mr-1"></i> รายวิชาที่เฝ้าระวัง (จัดอันดับตามความเสี่ยง)</p>
-                                <div id="ms-details-list" class="space-y-2"></div>
+                                <div id="ms-details-list" class="space-y-2">
+                                    <!-- Javascript จะใส่ข้อมูลตรงนี้ -->
+                                </div>
                             </div>
                         </div>
 
@@ -473,7 +456,7 @@
                         </div>
                     </div>
 
-                    <!-- Quick Action: Register Club -->
+                    <!-- Quick Action: Register Club (ย้ายมาไว้ใต้ตารางสถิติ) -->
                     <div id="quick-action-club" class="hidden-view mt-6">
                         <button onclick="navApp('club')" class="w-full bg-gradient-to-r from-purple-500 to-ns-blue text-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all flex items-center justify-between active:scale-95">
                             <div class="flex items-center gap-3">
@@ -567,18 +550,24 @@
 
                 <!-- VIEW: CLUB (ชุมนุม) -->
                 <div id="view-club" class="app-section hidden-view space-y-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="flex items-center gap-2">
-                            <button onclick="navApp('dashboard')" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-purple-100 rounded-full text-gray-600 hover:text-purple-700 transition active:scale-95" title="กลับหน้าแรก">
-                                <i class="fas fa-arrow-left"></i>
+                    <div class="flex justify-between items-center mb-3 gap-2">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navApp('dashboard')" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2.5 rounded-xl shadow-md hover:bg-gray-900 transition-all active:scale-95 shrink-0">
+                                <i class="fas fa-home text-sm"></i>
+                                <span class="text-xs font-bold">กลับไปหน้าหลัก</span>
                             </button>
-                            <div class="border-l-4 border-purple-500 pl-2">
+                            <div class="border-l-4 border-purple-500 pl-2 hidden sm:block">
                                 <h2 class="text-lg font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
                             </div>
                         </div>
-                        <button onclick="forceRefreshClubs()" class="flex items-center gap-1 text-[10px] sm:text-xs text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg border border-purple-200 shadow-sm transition-all active:scale-95">
-                            <i class="fas fa-sync-alt" id="icon-refresh-clubs"></i> อัปเดตข้อมูล
+                        <button onclick="forceRefreshClubs()" class="flex items-center gap-1.5 text-[10px] sm:text-xs text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-2 rounded-xl border border-purple-200 shadow-sm transition-all active:scale-95 shrink-0">
+                            <i class="fas fa-sync-alt" id="icon-refresh-clubs"></i> <span class="hidden sm:inline font-medium">อัปเดตข้อมูล</span>
                         </button>
+                    </div>
+                    
+                    <!-- หัวข้อแสดงผลสำหรับหน้าจอมือถือโดยเฉพาะเพื่อไม่ให้เบียดกับปุ่ม -->
+                    <div class="border-l-4 border-purple-500 pl-2 sm:hidden mb-2">
+                        <h2 class="text-base font-bold text-gray-800">ลงทะเบียนชุมนุม</h2>
                     </div>
                     
                     <div id="club-list-body" class="grid grid-cols-1 gap-4 pb-4">
@@ -595,6 +584,7 @@
 
                     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
                         <div class="flex items-center gap-4 border-b pb-4">
+                            <!-- ลิงก์ฟอร์มอื่นๆ หรือ Apps Script -->
                             <a href="#" onclick="showAlert('วิธีเพิ่มฟอร์ม', 'หากคุณสร้าง Google Form สำหรับตัดคะแนนพฤติกรรม หรืออื่นๆ คุณสามารถนำลิงก์มาฝังไว้ที่หน้า Admin นี้ได้เพื่อให้ทีมงานกดใช้สะดวกขึ้น', 'info'); return false;" class="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all group active:scale-95">
                                 <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-lg shrink-0">
                                     <i class="fas fa-plus"></i>
@@ -610,6 +600,7 @@
                     <!-- ส่วนฟอร์มตั้งค่าแบบเลือกหมวดหมู่ -->
                     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                         
+                        <!-- Dropdown Menu -->
                         <div class="mb-5">
                             <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-sliders-h text-ns-blue mr-2"></i>เลือกส่วนที่ต้องการตั้งค่าระบบ:</label>
                             <div class="relative">
@@ -653,6 +644,7 @@
                         <div id="cat-club" class="admin-cat-section space-y-4 hidden animate-[fadeSlideUp_0.3s_ease-out]">
                             <h3 class="text-sm font-bold text-gray-700 border-b pb-2 mb-3">ตั้งค่าระบบชุมนุม</h3>
                             
+                            <!-- เพิ่มปุ่มสวิตช์ เปิด/ปิด ชุมนุม -->
                             <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-4 shadow-sm">
                                 <label class="flex items-center justify-between text-sm font-bold text-purple-800 mb-1 cursor-pointer">
                                     <span><i class="fas fa-power-off mr-2"></i>เปิดให้ลงทะเบียนชุมนุม</span>
@@ -742,6 +734,7 @@
                     </div>
                 </div>
 
+                <!-- เพิ่มเครดิตหน้าแอปพลิเคชันหลัก -->
                 <div class="mt-8 mb-4 text-center w-full pb-6">
                     <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Powered by taskeen @narasikkhalai</p>
                 </div>
@@ -878,26 +871,249 @@
         </div>
     </div>
 
-    <!-- Modal: Schedule (ตารางเรียน) -->
-    <div id="schedule-modal" class="fixed inset-0 bg-black/60 z-[90] hidden-view flex flex-col justify-end sm:justify-center items-center backdrop-blur-sm transition-opacity">
-        <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl h-[85vh] sm:h-auto sm:max-h-[85vh] flex flex-col transform transition-transform translate-y-0 shadow-2xl overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-3xl sm:rounded-t-2xl">
-                <h3 class="font-bold text-lg text-ns-blue"><i class="fas fa-calendar-alt mr-2"></i>ตารางเรียน (<span id="schedule-room-title"></span>)</h3>
-                <button onclick="closeScheduleModal()" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-500 transition">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-100">
-                <div id="schedule-content" class="w-full"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- ========================================== -->
     <!-- JAVASCRIPT LOGIC -->
     <!-- ========================================== -->
+    
+    <!-- Firebase SDK & Logic (ย้ายการดึงสถิติจาก Sheets เป็น Firebase) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ตั้งค่า Firebase ตามที่คุณกำหนด
+        const firebaseConfig = {
+            apiKey: "AIzaSyAp93mNyQN3957F8tKAILx67jQ3RIhnAE0",
+            authDomain: "nsc-school-db.firebaseapp.com",
+            projectId: "nsc-school-db",
+            storageBucket: "nsc-school-db.firebasestorage.app",
+            messagingSenderId: "1039451911688",
+            appId: "1:1039451911688:web:10021d35f58ba733e203bd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 1. ฟังก์ชันคำนวณและสรุปยอดสถิติทั้งหมดบนหน้าแดชบอร์ด
+        window.fetchFirebaseStats = async function(studentId, studentRoom) {
+            try {
+                if (!auth.currentUser) await signInAnonymously(auth);
+            } catch (e) {
+                console.warn("ข้ามการยืนยันตัวตน:", e);
+            }
+
+            const stats = {
+                scanTotal: 0, scanIn: 0, scanOut: 0, lateSchool: 0,
+                missedClass: 0, lateClass: 0, skippedClass: 0,
+                leaveTotal: 0, leaveSick: 0, leavePersonal: 0,
+                bhPlus: 0, bhMinus: 0, msDetails: []
+            };
+
+            try {
+                // ก. room_records (สแกนเข้า-ออก, มาสายโรงเรียน)
+                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'เลขประจำตัว'
+                const roomSnap = await getDocs(collection(db, "room_records"));
+                roomSnap.forEach(doc => {
+                    const data = doc.data();
+                    const records = data.records || [];
+                    if (Array.isArray(records)) {
+                        records.forEach(rec => {
+                            if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                                stats.scanTotal++;
+                                if (rec["ประเภท(เข้า/ออก)"] === "เข้า") stats.scanIn++;
+                                if (rec["ประเภท(เข้า/ออก)"] === "ออก") stats.scanOut++;
+                                if (rec["สถานะ"] === "สาย") stats.lateSchool++;
+                            }
+                        });
+                    }
+                });
+
+                // ข. attendance_records (ขาดเรียน, มาสายรายวิชา, หนีเรียน, ม.ส.)
+                // โครงสร้าง: records เป็น Map (Object), ใช้ Key เป็นรหัสนักเรียน
+                let attSnap;
+                const msMap = {};
+                
+                if (studentRoom && studentRoom !== "-" && studentRoom !== "ไม่ระบุ") {
+                    const attQ = query(collection(db, "attendance_records"), where("room", "==", String(studentRoom)));
+                    attSnap = await getDocs(attQ);
+                } else {
+                    attSnap = await getDocs(collection(db, "attendance_records"));
+                }
+                
+                attSnap.forEach(doc => {
+                    const data = doc.data();
+                    const records = data.records || {};
+                    const stuRecord = records[String(studentId)] || records[Number(studentId)];
+                    
+                    if (stuRecord) {
+                        const status = String(stuRecord.status || "").trim();
+                        if (status.includes("ขาด")) stats.missedClass++;
+                        if (status.includes("สาย")) stats.lateClass++;
+                        if (status.includes("หนี")) stats.skippedClass++;
+                        
+                        if (status.includes("ขาด") || status.includes("หนี")) {
+                            const code = data.subjectCode || "ไม่ระบุ";
+                            if (!msMap[code]) {
+                                msMap[code] = { 
+                                    code: code, 
+                                    name: data.subjectName || "", 
+                                    teacher: data.teacherName || "", 
+                                    count: 0, 
+                                    remediated: false 
+                                };
+                            }
+                            msMap[code].count++;
+                            if (stuRecord.remediated) msMap[code].remediated = true;
+                        }
+                    }
+                });
+
+                // ค. leave_requests (ลาป่วย/ลากิจ)
+                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'รหัสประจำตัว'
+                const leaveSnap = await getDocs(collection(db, "leave_requests"));
+                leaveSnap.forEach(doc => {
+                    const data = doc.data();
+                    const records = data.records || [];
+                    if (Array.isArray(records)) {
+                        records.forEach(rec => {
+                            if (String(rec["รหัสประจำตัว"]) === String(studentId)) {
+                                stats.leaveTotal++;
+                                if (rec["ประเภทการลา"] === "ลาป่วย") stats.leaveSick++;
+                                if (rec["ประเภทการลา"] === "ลากิจ") stats.leavePersonal++;
+                            }
+                        });
+                    }
+                });
+
+                // ง. behavior_records (คะแนนพฤติกรรม)
+                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'เลขประจำตัว'
+                const bhSnap = await getDocs(collection(db, "behavior_records"));
+                bhSnap.forEach(doc => {
+                    const data = doc.data();
+                    const records = data.records || [];
+                    if (Array.isArray(records)) {
+                        records.forEach(rec => {
+                            if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                                const score = Math.abs(Number(rec["คะแนน"]) || 0);
+                                const type = String(rec["ประเภทคะแนน"] || "").trim();
+                                if (type === "บวก" || type === "เพิ่ม") stats.bhPlus += score;
+                                if (type === "ลบ" || type === "หัก") stats.bhMinus += score;
+                            }
+                        });
+                    }
+                });
+            } catch (err) {
+                console.error("Firebase stats fetch error:", err);
+            }
+            return stats;
+        };
+
+        // 2. ฟังก์ชันดึงประวัติเพื่อแสดงในหน้าต่างป๊อปอัป (เมื่อกดดูประวัติ)
+        window.fetchFirebaseDetails = async function(studentId, type, studentRoom) {
+            try {
+                if (!auth.currentUser) await signInAnonymously(auth);
+            } catch (e) { }
+
+            const details = [];
+            try {
+                if (type === 'scan' || type === 'late_school') {
+                    const snap = await getDocs(collection(db, "room_records"));
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const records = data.records || [];
+                        if (Array.isArray(records)) {
+                            records.forEach(rec => {
+                                if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                                    const dateStr = rec["วันที่"] || "ไม่ระบุวันที่";
+                                    if (type === 'scan') {
+                                        details.push({ date: dateStr, status: rec["ประเภท(เข้า/ออก)"] || "บันทึก", detail: `เวลา: ${rec["เวลาบันทึก"] || "-"}` });
+                                    } else if (type === 'late_school' && rec["สถานะ"] === "สาย") {
+                                        details.push({ date: dateStr, status: "สาย", detail: `เวลา: ${rec["เวลาบันทึก"] || "-"}` });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                else if (type === 'missed_class' || type === 'late_class' || type === 'skipped_class') {
+                    let snap;
+                    if (studentRoom && studentRoom !== "-" && studentRoom !== "ไม่ระบุ") {
+                        const q = query(collection(db, "attendance_records"), where("room", "==", String(studentRoom)));
+                        snap = await getDocs(q);
+                    } else {
+                        snap = await getDocs(collection(db, "attendance_records"));
+                    }
+                    
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const records = data.records || {};
+                        const stuRecord = records[String(studentId)] || records[Number(studentId)];
+                        
+                        if (stuRecord) {
+                            const status = String(stuRecord.status || "");
+                            let match = false;
+                            if (type === 'missed_class' && status.includes("ขาด")) match = true;
+                            if (type === 'late_class' && status.includes("สาย")) match = true;
+                            if (type === 'skipped_class' && status.includes("หนี")) match = true;
+                            
+                            if (match) {
+                                details.push({ 
+                                    date: data.date || "ไม่ระบุ", 
+                                    status: status, 
+                                    detail: `วิชา: ${data.subjectCode || ""} ${data.subjectName || ""} | คาบ: ${data.period || "-"} | ครู: ${data.teacherName || "-"}`
+                                });
+                            }
+                        }
+                    });
+                }
+                else if (type === 'leave') {
+                    const snap = await getDocs(collection(db, "leave_requests"));
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const records = data.records || [];
+                        if (Array.isArray(records)) {
+                            records.forEach(rec => {
+                                if (String(rec["รหัสประจำตัว"]) === String(studentId)) {
+                                    details.push({
+                                        date: rec["วันที่"] || "ไม่ระบุ",
+                                        status: rec["ประเภทการลา"] || "แจ้งลา",
+                                        detail: `ผู้บันทึก: ${rec["ผู้บันทึก"] || "-"}`
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                else if (type === 'behavior') {
+                    const snap = await getDocs(collection(db, "behavior_records"));
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const records = data.records || [];
+                        if (Array.isArray(records)) {
+                            records.forEach(rec => {
+                                if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                                    details.push({
+                                        date: rec["วันที่"] || "ไม่ระบุ",
+                                        status: rec["ประเภทคะแนน"] || "บันทึก",
+                                        detail: `คะแนน: ${rec["คะแนน"] || 0} | เหตุผล: ${rec["รายการพฤติกรรม"] || "-"}`
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Firebase details fetch error:", err);
+            }
+            return details;
+        };
+    </script>
+
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyGxA-VPEmk4HYGH43_YLFYZuXSgNEKN--5QkXPwSGI2FodfcikXGwxZDk7IkQdcyU/exec"; 
+        
+        // ใส่ LIFF ID ตัวใหม่ที่ได้จาก Provider เดียวกับบอท (ระวังอย่าให้มีช่องว่างหรือบรรทัดใหม่)
         const LIFF_ID = "2009881010-uAKXQOsM"; 
         
         let currentUser = null; 
@@ -907,47 +1123,68 @@
         let clubInterval = null; 
         let systemSettings = {}; 
         let studentCurrentClub = null; 
-        let alertCallback = null; 
-        let announcementShown = false; 
+        let alertCallback = null; // เพิ่มตัวแปรสำหรับรับ Callback เพื่อทำงานต่อหลังจากกดตกลง
+        let announcementShown = false; // ตัวแปรเช็คว่าเคยแสดงป๊อปอัปข่าวสารไปแล้วหรือยังในเซสชันนี้
         let isPreloadingDetails = false;
 
         document.addEventListener("DOMContentLoaded", async () => {
+            // [ใหม่] ตรวจจับเบราว์เซอร์ของ LINE ทันทีที่เปิดเว็บ
+            const isLineBrowser = /Line/i.test(navigator.userAgent);
+            if (isLineBrowser) {
+                const lineWarning = document.getElementById('line-browser-warning');
+                lineWarning.classList.remove('hidden-view');
+                lineWarning.classList.add('flex');
+            }
+
             const savedUser = localStorage.getItem('ns_username');
             if(savedUser) {
                 document.getElementById('login-username').value = savedUser;
                 document.getElementById('remember-me').checked = true;
                 
-                // 🚀 [แก้ไขที่ 1] ปิดการพรีโหลดสถิติอัตโนมัติ เพื่อหยุดการยิงคำขอใส่เซิร์ฟเวอร์พร้อมกันตอนคนเปิดเว็บ
-                // const cleanId = savedUser.replace(/_p|_P/gi, '').trim();
-                // preloadStatsSilent(cleanId);
+                // [ใหม่] พรีโหลดข้อมูลสถิติของ user เดิมทันทีที่เปิดเว็บ
+                const cleanId = savedUser.replace(/_p|_P/gi, '').trim();
+                let savedRoom = null;
+                try {
+                    // ลองหาข้อมูลห้องจาก Cache เก่า
+                    const cachedStats = JSON.parse(localStorage.getItem('ns_stats_' + cleanId));
+                    if (cachedStats && cachedStats.room) savedRoom = cachedStats.room;
+                } catch(e) {}
+                
+                preloadStatsSilent(cleanId, savedRoom);
             }
             
-            // 🚀 [แก้ไขที่ 2] ปิดการพรีโหลดชุมนุมอัตโนมัติ
-            // preloadClubsSilent();
+            // [ใหม่] พรีโหลดข้อมูลชุมนุมรอไว้สำหรับทุกคน
+            preloadClubsSilent();
 
-            // 🚀 [แก้ไขที่ 3] คอมเมนต์ Event blur ทิ้งทั้งหมด! นี่คือตัวการหลักที่ทำให้ระบบล่มตอนเด็กกำลังพิมพ์รหัสเข้าสู่ระบบ
-            /*
+            // [ใหม่] หากพิมพ์ชื่อผู้ใช้ใหม่ ให้แอบโหลดข้อมูลเตรียมรอไว้เลย (ตอนเปลี่ยนไปช่องรหัสผ่าน)
             document.getElementById('login-username').addEventListener('blur', (e) => {
                 const u = e.target.value.trim();
                 if (u.length >= 4) {
                     const cleanId = u.replace(/_p|_P/gi, '').trim();
-            // document.getElementById('login-username').addEventListener('blur', (e) => { ... });
-            // */
+                    preloadStatsSilent(cleanId);
+                }
+            });
 
             document.getElementById('leave-date').valueAsDate = new Date();
-            
-            // 🚀 แก้ไขที่ 1: นำ await ออก เพื่อไม่ให้การโหลดหน้าเว็บถูกบล็อกตอนรอ API (ทำให้หน้าเว็บแสดงผลทันทีไม่หมุนค้าง)
-            initApp();
-            initLIFF();
+            await initApp();
+            await initLIFF();
         });
 
         // --- ฟังก์ชันโหลดข้อมูลเงียบๆ หลังบ้านตอนเปิดเว็บ (Preload) ---
-        async function preloadStatsSilent(cleanId) {
+        async function preloadStatsSilent(cleanId, room = null) {
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
             try {
                 const res = await apiCall('getStats', { id: cleanId });
                 if (res.status === 'success') {
+                    // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
+                    while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
+                    try {
+                        const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                        res.data = { ...res.data, ...fbStats };
+                    } catch (fbErr) { console.error('Firebase Preload Error:', fbErr); }
+                    // [สิ้นสุด]
+
                     localStorage.setItem(cacheKey, JSON.stringify(res.data));
                     localStorage.setItem(timeKey, Date.now().toString());
                     if (res.data.settings) {
@@ -957,6 +1194,16 @@
                     }
                 }
             } catch(e) { console.log('Preload stats skipped'); }
+            
+            // สั่งโหลดประวัติย่อยๆ ต่อทันที
+            preloadStatDetailsSilent(cleanId);
+        }
+
+        // [ใหม่] ฟังก์ชันแอบดึงรายละเอียดทุกหมวดหมู่มาเก็บในเครื่องทันทีแบบไม่หน่วงเวลา
+        async function preloadStatDetailsSilent(cleanId, room = null) {
+            // 🚀 [ปรับปรุง] ปิดการทำงานของฟังก์ชันนี้ เพื่อให้ระบบดึงข้อมูลจาก Firebase "เฉพาะตอนที่นักเรียนกดดูประวัติเท่านั้น" 
+            // จะช่วยเซฟโควต้าลงไปได้ 7 ครั้งต่อ 1 การล็อกอิน
+            return;
         }
 
         async function preloadClubsSilent() {
@@ -975,8 +1222,7 @@
         async function apiCall(action, params = {}) {
             const payload = { action: action, ...params };
             const controller = new AbortController();
-            // 🚀 [แก้ไข] ขยายเวลา Timeout จาก 15 วิ เป็น 30 วิ เพื่อรองรับช่วง Peak ตอนแย่งกันลงทะเบียนชุมนุม
-            const timeoutId = setTimeout(() => controller.abort(), 30000); 
+            const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
             try {
                 const response = await fetch(GAS_URL, { 
@@ -1005,9 +1251,9 @@
         // จัดการแจ้งเตือน Error
         function handleErrorAlert(err) {
             if (err.message === "DEPLOY_ERROR") {
-                showAlert("เซิร์ฟเวอร์ทำงานหนักหรือการเชื่อมต่อถูกบล็อก", "สาเหตุ: มีผู้ใช้งานพร้อมกันจำนวนมาก ทำให้เซิร์ฟเวอร์ Google ตอบสนองไม่ทัน\nวิธีแก้: กรุณารอสักครู่แล้วลองใหม่อีกครั้ง", "error");
+                showAlert("ระบบถูกบล็อกการเชื่อมต่อโดย Google!", "สาเหตุ: การตั้งค่า Deploy ผิดพลาด\nวิธีแก้: \nใน Apps Script ตอน Deploy ช่อง 'ผู้มีสิทธิ์เข้าถึง' ต้องตั้งเป็น 'ทุกคน (Anyone)'", "error");
             } else if (err.message === "TIMEOUT") {
-                showAlert("หมดเวลาเชื่อมต่อ", "เซิร์ฟเวอร์มีผู้ใช้งานหนาแน่น (เกิน 30 วินาที)\nกรุณารอสักครู่แล้วทำรายการใหม่", "error");
+                showAlert("หมดเวลาเชื่อมต่อ", "เซิร์ฟเวอร์ไม่ตอบสนองเกิน 15 วินาที\nกรุณาตรวจสอบอินเทอร์เน็ตของคุณ", "error");
             } else {
                 showAlert("เกิดข้อผิดพลาด", err.message, "error");
             }
@@ -1016,35 +1262,23 @@
         // โหลดข้อมูลตั้งค่าเริ่มต้นระบบ
         async function initApp() {
             const cachedSettings = localStorage.getItem('nsc_settings');
-            const lastSettingsFetch = localStorage.getItem('nsc_settings_time');
-            const now = Date.now();
-
             if (cachedSettings) { 
                 systemSettings = JSON.parse(cachedSettings); 
                 applySettingsToUI(); 
-                
-                // 🚀 แก้ไขที่ 2: หากมีแคชตั้งค่าใน 1 วัน (86400000 ms) ไม่ต้องดึงใหม่ เพื่อลดภาระเซิร์ฟเวอร์มหาศาลตอนนักเรียนเปิดเว็บตอนเช้า
-                if (lastSettingsFetch && (now - parseInt(lastSettingsFetch) < 86400000)) {
-                    return; 
-                }
             } else { 
                 document.getElementById('school-name-login').innerText = "กำลังเชื่อมต่อฐานข้อมูล...";
             }
 
             try {
-                // 🚀 แก้ไขที่ 3: สุ่มหน่วงเวลาก่อนดึง 1-4 วินาที เพื่อกระจายคิว 2300 คนไม่ให้ยิงขอตั้งค่าพร้อมกันเป๊ะๆ
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 4000));
-
                 const res = await apiCall('getSettings');
                 if (res.status === 'success') { 
                     systemSettings = res.data; 
                     localStorage.setItem('nsc_settings', JSON.stringify(systemSettings)); 
-                    localStorage.setItem('nsc_settings_time', Date.now().toString());
                     applySettingsToUI(); 
                 }
             } catch (error) { 
                 console.warn('ไม่สามารถโหลดการตั้งค่าได้ ใช้แคชเดิมหากมี', error); 
-                document.getElementById('school-name-login').innerText = "NS Student Care";
+                // document.getElementById('school-name-login').innerText = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
             }
         }
 
@@ -1089,9 +1323,11 @@
             const annText = document.getElementById('setting-announcement-text');
             if (systemSettings.announcementText !== undefined && annText) annText.value = systemSettings.announcementText;
             
+            // อัปเดตสถานะเปิด/ปิดชุมนุม
             const clubStatus = document.getElementById('setting-club-status');
-            if (clubStatus) clubStatus.checked = (systemSettings.isOpenClub !== false); 
+            if (clubStatus) clubStatus.checked = (systemSettings.isOpenClub !== false); // ค่าเริ่มต้นคือ true(เปิด)
 
+            // --- อัปเดตข้อมูลเกณฑ์คะแนนพฤติกรรมลงในหน้าฟอร์ม ---
             const wLimit = document.getElementById('setting-bh-warning');
             if (wLimit && systemSettings.bhWarning !== undefined) wLimit.value = systemSettings.bhWarning;
             
@@ -1153,6 +1389,7 @@
                                     document.getElementById('reg-step-1').classList.remove('hidden-view');
                                     liff.logout();
                                     
+                                    // พาไปหน้าเพิ่มเพื่อนอัตโนมัติ (หากตั้งค่าลิงก์ Line OA ไว้)
                                     if(hasLineLink) {
                                         window.location.href = systemSettings.lineLink;
                                     }
@@ -1198,7 +1435,9 @@
             }
         }
 
+        // เพิ่มฟังก์ชันสำหรับเปิดลิงก์เพิ่มเพื่อน
         function addSchoolLineFriend() {
+            // ดึงลิงก์จากที่แอดมินตั้งค่าไว้ หรือใช้ค่าเริ่มต้นถ้าไม่ได้ตั้ง
             const lineLink = (systemSettings && systemSettings.lineLink) ? systemSettings.lineLink : "";
             if(lineLink && lineLink !== "") {
                 window.open(lineLink, '_blank');
@@ -1207,6 +1446,7 @@
             }
         }
 
+        // --- เพิ่ม 3 ฟังก์ชันนี้กลับเข้าไป ---
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden-view'); }
         function hideLoading() { 
             document.getElementById('loading-overlay').classList.add('hidden-view'); 
@@ -1222,7 +1462,8 @@
             alertCallback = callback;
             document.getElementById('alert-modal').classList.remove('hidden-view');
         }
-        
+        // ------------------------------------
+
         function closeAlert() { 
             document.getElementById('alert-modal').classList.add('hidden-view'); 
             if(typeof alertCallback === 'function') {
@@ -1282,6 +1523,8 @@
                 const res = await apiCall('login', { u: u, p: p });
 
                 if(res.status === 'success') {
+                    // เอาการลบ sessionStorage ออก เพื่อให้โหลด Cache เดิมได้ข้ามครั้ง
+                    
                     if(rem) localStorage.setItem('ns_username', u);
                     else localStorage.removeItem('ns_username');
                     
@@ -1316,11 +1559,10 @@
                     } else {
                         navApp('dashboard'); 
                         
-                        // 🚀 แก้ไขที่ 4: ขยายเวลาแอบโหลดชุมนุมออกไปเป็น 15-45 วินาที ให้เซิร์ฟเวอร์จัดการคิวล็อกอินหลักให้เสร็จก่อน
-                        setTimeout(() => {
-                            const perms = systemSettings?.permissions?.[res.role];
-                            if (perms && perms.club) fetchClubsSilent();
-                        }, 15000 + Math.random() * 30000);
+                        // [เพิ่มประสิทธิภาพ] สั่งโหลดข้อมูลรอแบบเงียบๆ ทันที 100% ไม่ต้องหน่วงเวลาแล้ว
+                        const perms = systemSettings?.permissions?.[res.role];
+                        if (perms && perms.club) preloadClubsSilent();
+                        preloadStatDetailsSilent(res.data.id);
                     }
                 } else {
                     showAlert('เข้าระบบไม่สำเร็จ', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
@@ -1337,6 +1579,8 @@
             document.getElementById('login-password').value = '';
             if (dashInterval) clearInterval(dashInterval);
             if (clubInterval) clearInterval(clubInterval);
+            
+            // ใช้ sessionStorage แทนเพื่อไม่ให้ลบ Cache ของ localStorage
             sessionStorage.clear(); 
             switchView('view-login');
         }
@@ -1351,7 +1595,6 @@
             const navClub = document.querySelector('[data-target="club"]');
             const navAdmin = document.getElementById('nav-btn-admin'); 
             const btnQr = document.getElementById('btn-show-qr');
-            const btnSchedule = document.getElementById('btn-show-schedule');
 
             if(role === 'admin') {
                 greeting.innerHTML = `แอดมิน: <span class="text-base sm:text-lg font-bold text-ns-orange">${u.name || 'Admin'}</span>`;
@@ -1366,17 +1609,11 @@
                 greeting.innerHTML = `นักเรียน: <span class="text-base sm:text-lg font-bold text-ns-blue">${u.id} ${u.name}</span> <span class="text-xs text-gray-500 font-normal ml-1">(${u.room})</span>`;
             }
 
+            // ซ่อน/แสดงไอคอน QR เฉพาะนักเรียน
             if (role === 'student' && btnQr) {
                 btnQr.classList.remove('hidden-view');
             } else if (btnQr) {
                 btnQr.classList.add('hidden-view');
-            }
-
-            if ((role === 'student' || role === 'parent') && btnSchedule) {
-                btnSchedule.classList.remove('hidden-view');
-                loadCurrentPeriodBanner();
-            } else if (btnSchedule) {
-                btnSchedule.classList.add('hidden-view');
             }
 
             const perms = (systemSettings && systemSettings.permissions && systemSettings.permissions[role]) ? systemSettings.permissions[role] : null;
@@ -1399,11 +1636,12 @@
                 navAdmin.style.display = 'none';
             }
 
-            // 🚀 [แก้ไข] นำคำสั่ง loadStats() ตรงนี้ออก เพื่อแก้ปัญหาการยิง API ซ้ำซ้อน (Double Fire) ทันทีที่ล็อกอิน
+            loadStats();
         }
 
         let lastAdminFetch = 0;
         async function loadAdminSettings() {
+            // [เพิ่มประสิทธิภาพ] ดึงค่าใหม่เมื่อข้อมูลเก่าเกิน 60 วินาที เพื่อไม่ให้โหลดทุกครั้งที่กดเมนูแอดมิน
             if (Date.now() - lastAdminFetch < 60000) return; 
             try {
                 const res = await apiCall('getSettings');
@@ -1427,6 +1665,7 @@
             });
             document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden-view'));
             
+            // ใช้เทคนิค Reflow เพื่อให้ Animation ทำงานทุกครั้งที่เปลี่ยนหน้า
             const targetView = document.getElementById('view-' + target);
             targetView.classList.remove('hidden-view');
             targetView.style.animation = 'none';
@@ -1436,27 +1675,24 @@
             if (dashInterval) clearInterval(dashInterval);
             if (clubInterval) clearInterval(clubInterval);
 
-            // 🚀 [แก้ไข] ปรับเปลี่ยน Polling ให้สุ่มขยายเวลาอัปเดตเป็น 2 - 3.5 นาที ป้องกันอาการ GAS ล่มตอนเด็กสแตนบายหน้าแดชบอร์ด
             if (target === 'dashboard') {
                 loadStats();
-                dashInterval = setInterval(fetchStatsSilent, 120000 + Math.random() * 90000); 
             } else if (target === 'club') {
                 loadClubs(); 
-                clubInterval = setInterval(fetchClubsSilent, 90000 + Math.random() * 90000); 
             } else if (target === 'admin') {
                 loadAdminSettings(); 
             }
         }
 
-        let isFetchingStats = false; // 🚀 [แก้ไข] เพิ่มตัวล็อกกันสแปมปุ่ม
-        
         async function loadStats() {
-            if (!currentUser || isFetchingStats) return; 
+            if (!currentUser) return; 
             
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
+            const room = currentUser.data.room || null;
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
             
+            // [ปรับปรุง] เปลี่ยนจาก sessionStorage เป็น localStorage เพื่อให้ข้อมูลคงอยู่เมื่อปิดหน้าเว็บ
             const cachedData = localStorage.getItem(cacheKey);
             const lastFetch = localStorage.getItem(timeKey);
             
@@ -1469,25 +1705,25 @@
                     const now = new Date(parseInt(lastFetch));
                     const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}`;
                     document.getElementById('dash-sync-time').innerText = timeStr + " น.";
-                    
-                    // 🚀 แก้ไขที่ 5 (สำคัญมาก): ป้องกันการยิง API ซ้ำซ้อน! หากแคชเพิ่งดึงไปไม่เกิน 5 นาที จะไม่อัปเดตข้อมูลเงียบๆ ทันที
-                    if (Date.now() - parseInt(lastFetch) > 300000) {
-                        fetchStatsSilent(); 
-                    }
                 } else {
                     document.getElementById('dash-sync-time').innerText = "ข้อมูลแคชเดิม";
-                    fetchStatsSilent(); 
                 }
             } else {
                 if(currentUser.role !== 'admin') {
                     document.getElementById('stat-scan').innerHTML = '<i class="fas fa-spinner fa-spin text-gray-300"></i>';
                 }
-                
-                isFetchingStats = true; // ล็อกการดึงข้อมูล
                 try {
                     const res = await apiCall('getStats', { id: cleanId });
                     if (!currentUser) return; 
                     if(res.status === 'success') {
+                        // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
+                        while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
+                        try {
+                            const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                            res.data = { ...res.data, ...fbStats };
+                        } catch (fbErr) { console.error('Firebase Load Error:', fbErr); }
+                        // [สิ้นสุด]
+
                         localStorage.setItem(cacheKey, JSON.stringify(res.data)); 
                         localStorage.setItem(timeKey, Date.now().toString());
                         
@@ -1499,57 +1735,41 @@
                         updateStatsUI(res.data);
                         updateSyncTime('dash-sync-time');
                     }
-                } catch(e) { 
-                } finally {
-                    isFetchingStats = false; // ปลดล็อก
-                }
+                } catch(e) { }
             }
         }
 
-        async function fetchStatsSilent() {
-            if (!currentUser || currentUser.role === 'admin' || isFetchingStats) return;
-            isFetchingStats = true;
-            
-            const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
-            const cacheKey = 'ns_stats_' + cleanId;
-            const timeKey = 'ns_stats_time_' + cleanId;
-            
-            try {
-                const res = await apiCall('getStats', { id: cleanId });
-                if(res && res.status === 'success' && currentUser) {
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                    localStorage.setItem(timeKey, Date.now().toString());
-                    
-                    if (res.data.settings) {
-                        systemSettings = res.data.settings;
-                        localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
-                    }
-                    
-                    updateStatsUI(res.data);
-                    updateSyncTime('dash-sync-time');
-                }
-            } catch (e) {
-                console.log("Background refresh silent update skipped smoothly.");
-            } finally {
-                isFetchingStats = false;
-            }
-        }
+        let isFetchingStats = false; // ตัวแปรล็อกป้องกันการดึงข้อมูลซ้ำซ้อนถ้าเน็ตช้า
 
         async function forceRefreshStats() {
             if (!currentUser || currentUser.role === 'admin' || isFetchingStats) return;
-            isFetchingStats = true;
             
-            showLoading();
+            isFetchingStats = true; 
+            const btn = document.getElementById('btn-refresh-stats');
+            const icon = document.getElementById('icon-refresh-stats');
+            
+            if (icon) icon.classList.add('fa-spin');
+            
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
+            const room = currentUser.data.room || null;
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
             
+            // สั่งลบ Cache ประวัติย่อยทิ้งให้หมด เพื่อให้โหลดใหม่ด้วย
             const types = ['scan', 'late_school', 'missed_class', 'late_class', 'skipped_class', 'leave', 'behavior'];
             types.forEach(t => localStorage.removeItem(`ns_stat_details_${cleanId}_${t}`));
             
             try {
                 const res = await apiCall('getStats', { id: cleanId });
                 if(res.status === 'success' && currentUser) {
+                    // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
+                    while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
+                    try {
+                        const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                        res.data = { ...res.data, ...fbStats };
+                    } catch (fbErr) { console.error('Firebase Refresh Error:', fbErr); }
+                    // [สิ้นสุด]
+
                     localStorage.setItem(cacheKey, JSON.stringify(res.data));
                     localStorage.setItem(timeKey, Date.now().toString());
                     
@@ -1560,6 +1780,9 @@
                     
                     updateStatsUI(res.data);
                     updateSyncTime('dash-sync-time');
+                    
+                    // ดึงประวัติย่อยใหม่แบบเบื้องหลัง
+                    preloadStatDetailsSilent(cleanId);
                     
                     showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลสถิติล่าสุดจากระบบเรียบร้อยแล้ว', 'success');
                 } else {
@@ -1568,39 +1791,8 @@
             } catch (e) { 
                 handleErrorAlert(e);
             } finally {
-                isFetchingStats = false;
-                hideLoading();
-            }
-        }
-
-        // 🚀 [เพิ่ม] ฟังก์ชันอัปเดตชุมนุมที่ขาดหายไปในโค้ดเดิม พร้อมระบบ Cooldown ป้องกันกดรัวๆ
-        let isFetchingClubs = false;
-        let lastForceRefreshClubs = 0;
-        async function forceRefreshClubs() {
-            if (!currentUser) return;
-            
-            const now = Date.now();
-            if (now - lastForceRefreshClubs < 30000) {
-                showAlert('กรุณารอสักครู่', 'ระบบเพิ่งอัปเดตข้อมูลชุมนุมไป กรุณารอ 30 วินาที เพื่ออัปเดตใหม่อีกครั้ง', 'info');
-                return;
-            }
-            lastForceRefreshClubs = now;
-
-            showLoading();
-            try {
-                const res = await apiCall('getClubs', {});
-                if(res.status === 'success' && currentUser) {
-                    const cacheKey = 'ns_club_list_data';
-                    sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
-                    renderClubsUI(res.data, false);
-                    showAlert('อัปเดตสำเร็จ', 'ดึงข้อมูลชุมนุมล่าสุดเรียบร้อยแล้ว', 'success');
-                } else {
-                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลชุมนุมได้', 'error');
-                }
-            } catch (e) {
-                handleErrorAlert(e);
-            } finally {
-                hideLoading();
+                isFetchingStats = false; 
+                if (icon) icon.classList.remove('fa-spin');
             }
         }
 
@@ -1614,6 +1806,7 @@
                 }
             }
 
+            // แสดงป๊อปอัปประชาสัมพันธ์ (ถ้าเปิดใช้งานและมีข้อความ)
             if (systemSettings && systemSettings.showAnnouncement && systemSettings.announcementText) {
                 showAnnouncementPopup(systemSettings.announcementText);
             }
@@ -1632,26 +1825,25 @@
                 qaClub.classList.add('hidden-view');
             }
 
-            document.getElementById('stat-scan').innerText = data.scanTotal || 0;
-            document.getElementById('stat-scan-in').innerText = data.scanIn || 0;
-            document.getElementById('stat-scan-out').innerText = data.scanOut || 0;
-            document.getElementById('stat-late-school').innerText = data.lateSchool || 0;
-            document.getElementById('stat-missed-class').innerText = data.missedClass || 0;
-            document.getElementById('stat-late-class').innerText = data.lateClass || 0;
-            document.getElementById('stat-skipped-class').innerText = data.skippedClass || 0;
-            document.getElementById('stat-leave').innerText = data.leaveTotal || 0;
-            document.getElementById('stat-leave-sick').innerText = data.leaveSick || 0;
-            document.getElementById('stat-leave-personal').innerText = data.leavePersonal || 0;
+            document.getElementById('stat-scan').innerText = data.scanTotal;
+            document.getElementById('stat-scan-in').innerText = data.scanIn;
+            document.getElementById('stat-scan-out').innerText = data.scanOut;
+            document.getElementById('stat-late-school').innerText = data.lateSchool;
+            document.getElementById('stat-missed-class').innerText = data.missedClass;
+            document.getElementById('stat-late-class').innerText = data.lateClass;
+            document.getElementById('stat-skipped-class').innerText = data.skippedClass;
+            document.getElementById('stat-leave').innerText = data.leaveTotal;
+            document.getElementById('stat-leave-sick').innerText = data.leaveSick;
+            document.getElementById('stat-leave-personal').innerText = data.leavePersonal;
             
             const totalAbsence = (Number(data.missedClass) || 0) + (Number(data.skippedClass) || 0);
             
+            // คำนวณจำนวนวิชาที่ติดและแก้ตัวแล้วจาก msDetails
             let remediatedAbsence = 0;
-            let atRiskCount = 0;
             let remCount = 0;
 
             if (data.msDetails && data.msDetails.length > 0) {
                 data.msDetails.forEach(subj => {
-                    atRiskCount++;
                     if (subj.remediated) {
                         remediatedAbsence += subj.count;
                         remCount++;
@@ -1659,6 +1851,7 @@
                 });
             }
             
+            // จำนวนครั้งที่ยังคงทำงานอยู่ (ยอดที่ยังไม่แก้) - จะเป็นตัวกำหนดความยาวของเส้นกราฟ
             const activeAbsence = Math.max(0, totalAbsence - remediatedAbsence);
 
             const msBadge = document.getElementById('ms-status-badge');
@@ -1669,48 +1862,39 @@
             const msDetailsList = document.getElementById('ms-details-list');
             
             if (msBadge && msBar && msIcon) {
+                // คำนวณความกว้างจาก "ยอดที่ยังไม่ได้แก้" เท่านั้น เพื่อให้กราฟหดตัวลง
                 let activeProgressPercent = Math.min(100, (activeAbsence / 10) * 100); 
-                let remediatedProgressPercent = Math.min(100 - activeProgressPercent, (remediatedAbsence / 10) * 100);
                 
-                if (msBarRemediated) msBarRemediated.style.width = remediatedProgressPercent + '%';
+                // ปิดการแสดงผลของกราฟสีทองแบบต่อกัน (ให้ความกว้างเป็น 0)
+                if (msBarRemediated) msBarRemediated.style.width = '0%';
+                
+                // ให้เส้นกราฟหดตัวลงไปอยู่จุดปลอดภัย
                 msBar.style.width = activeProgressPercent + '%';
 
-                if (activeAbsence === 0 && remediatedAbsence > 0) {
-                    if (msBarRemediated) msBarRemediated.style.width = '0%';
-                    msBar.style.width = '0%';
-
-                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
-                    msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
-                    msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
+                if (activeAbsence >= 8) {
+                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
+                    msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
+                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
+                    msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
+                } else if (activeAbsence >= 4) {
+                    msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
+                    msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
+                    msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
+                    msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
                 } else {
-                    if (msBarRemediated) {
-                        msBarRemediated.style.width = remediatedProgressPercent + '%';
-                        msBarRemediated.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
-                    }
-                    msBar.style.width = activeProgressPercent + '%';
-
-                    if (activeAbsence >= 8) {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
-                        msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
-                        msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
-                    } else if (activeAbsence >= 4) {
-                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
-                        msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
-                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
-                        msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
+                    // ปลอดภัย (ต่ำกว่า 4 ครั้ง หรือ แก้จนยอดลดลงมาต่ำกว่า 4 แล้ว)
+                    if (remCount > 0) {
+                        // ถ้าปลอดภัยเพราะแก้ตัวมาแล้ว ให้เป็นสีเหลืองทอง
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
+                        msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
+                        msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
                     } else {
-                        if (remCount > 0) {
-                            msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
-                            msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
-                            msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
-                            msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
-                        } else {
-                            msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
-                            msBadge.innerText = 'ปลอดภัย';
-                            msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
-                            msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
-                        }
+                        // ปลอดภัยปกติ
+                        msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
+                        msBadge.innerText = 'ปลอดภัย';
+                        msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
+                        msIcon.className = 'fas fa-shield-alt text-xl text-green-500';
                     }
                 }
 
@@ -1718,6 +1902,7 @@
                     msDetailsContainer.classList.remove('hidden-view');
                     let listHtml = '';
                     data.msDetails.forEach(subj => {
+                        // ตรวจสอบสถานะการแก้ตัวเพื่อสลับคลาส CSS (ปรับเป็นสีเขียวทั้งหมด)
                         const isRemediated = subj.remediated === true;
                         const borderClass = isRemediated ? 'border-green-300' : 'border-red-100';
                         const bgClass = isRemediated ? 'bg-green-50/70' : 'bg-white';
@@ -1726,6 +1911,7 @@
                         const countLabelColor = isRemediated ? 'text-green-600' : 'text-red-500';
                         const countBg = isRemediated ? 'bg-green-100 border-green-200' : 'bg-red-50 border-red-200';
                         
+                        // ป้ายกำกับ (Badge) ดำเนินแก้ตัวแล้ว (สีเขียว)
                         const badgeHtml = isRemediated 
                             ? `<div class="mt-1.5"><span class="text-[9px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm"><i class="fas fa-check-circle mr-1"></i>ดำเนินแก้ตัวแล้ว</span></div>` 
                             : '';
@@ -1808,8 +1994,7 @@
                 let teachers = '-';
                 if (studentCurrentClub.teacher && studentCurrentClub.teacher !== '-') {
                     teachers = studentCurrentClub.teacher.split(',').map(t => {
-                        let name = t.trim();
-                        name = name.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '').trim();
+                        let name = t.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '').trim();
                         return 'ครู' + name;
                     }).join(', ');
                 }
@@ -1848,11 +2033,12 @@
 
         function updateSyncTime(elementId) {
             const now = new Date();
-            const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}:${now.getSeconds() < 10 ? '0':''}${now.getSeconds()}`;
+            const timeStr = `${now.getHours() < 10 ? '0':''}${now.getHours()}:${now.getMinutes() < 10 ? '0':''}${now.getMinutes()}`;
             const el = document.getElementById(elementId);
-            if(el) el.innerText = timeStr;
+            if(el) el.innerText = timeStr + " น.";
         }
 
+        // [แก้ไข] ดึงข้อมูลจาก Cache ล่วงหน้า ทำให้แสดงผล 0 วินาที
         async function openDetailModal(type) {
             const titleMap = { 
                 scan: 'ประวัติเข้า-ออก', 
@@ -1867,76 +2053,90 @@
             document.getElementById('detail-modal').classList.remove('hidden-view');
 
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
+            const room = currentUser.data.room || null;
             const cacheKey = `ns_stat_details_${cleanId}_${type}`;
+            const timeKey = `ns_stat_details_time_${cleanId}_${type}`; // 🚀 เพิ่มตัวแปรเวลาเช็คแคช
+            
             const cachedData = localStorage.getItem(cacheKey);
+            const lastFetch = localStorage.getItem(timeKey);
 
-            // 🚀 [แก้ไข] เพิ่ม UX หมุนโหลดและดึงข้อมูลเฉพาะหน้าตากล่องป๊อปอัปแบบ Lazy Load เพื่อประหยัด API ไม่ประมวลผลล่วงหน้าพร้อมกันตอนเช้า
-            if (cachedData) {
+            // 🚀 [ปรับปรุง] หากเคยดึงประวัติมาแล้วใน 5 นาที (300,000 ms) จะเอาของในเครื่องมาแสดงเลย ไม่วิ่งไปกวนโควต้า Firebase
+            if (cachedData && lastFetch && (Date.now() - parseInt(lastFetch) < 300000)) {
                 renderDetailModalUI(JSON.parse(cachedData));
-                
-                apiCall('getStatDetails', { id: cleanId, type: type }).then(res => {
-                    if (res.status === 'success' && res.data) {
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                        renderDetailModalUI(res.data);
-                    }
-                }).catch(e => {});
             } else {
-                document.getElementById('modal-content').innerHTML = `
-                    <div class="text-center py-10">
-                        <i class="fas fa-circle-notch fa-spin text-4xl mb-4 text-ns-blue"></i>
-                        <p class="text-gray-600 font-medium">กำลังโหลดข้อมูลจากฐานข้อมูล...</p>
-                        <p class="text-xs text-gray-400 mt-2">อาจใช้เวลาสักครู่</p>
-                    </div>`;
+                // หากไม่มีให้หมุนโหลดรอ / ถ้ามีแต่หมดอายุให้แสดงภาพเก่าไปพลางๆ
+                if (cachedData) renderDetailModalUI(JSON.parse(cachedData));
+                else document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลจากระบบ...</p></div>';
+                
                 try {
-                    const res = await apiCall('getStatDetails', { id: cleanId, type: type });
-                    if (res.status === 'success' && res.data) {
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                        renderDetailModalUI(res.data);
-                    } else {
+                    // ดึงรายละเอียดจาก Firebase
+                    while (!window.fetchFirebaseDetails) { await new Promise(r => setTimeout(r, 50)); }
+                    const fbDetails = await window.fetchFirebaseDetails(cleanId, type, room);
+                    
+                    if (fbDetails && fbDetails.length > 0) {
+                        localStorage.setItem(cacheKey, JSON.stringify(fbDetails));
+                        localStorage.setItem(timeKey, Date.now().toString()); // บันทึกเวลาที่เพิ่งดึง
+                        
+                        // ถ้านักเรียนยังไม่ได้กดปิดหน้าต่างหนีไปก่อน ให้วาดประวัติที่ดึงเสร็จลงไป
+                        if (!document.getElementById('detail-modal').classList.contains('hidden-view') && 
+                            document.getElementById('modal-title').innerText === titleMap[type]) {
+                            renderDetailModalUI(fbDetails);
+                        }
+                    } else if (!cachedData) {
                         document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
                     }
                 } catch(e) {
-                    document.getElementById('modal-content').innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
-                            <p>เซิร์ฟเวอร์หนาแน่น โหลดข้อมูลไม่สำเร็จ</p>
-                            <button onclick="openDetailModal('${type}')" class="mt-4 px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-bold">ลองใหม่อีกครั้ง</button>
-                        </div>`;
+                    if (!cachedData) document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
                 }
             }
         }
 
+        // ออกแบบกล่องประวัติใหม่ เพื่อแยกการแสดงผลวันที่ และ คาบที่ ให้เด่นชัดเจน
         function renderDetailModalUI(data) {
             if (data && data.length > 0) {
                 let html = '';
                 data.forEach((item, index) => {
-                    html += `<div class="p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2 text-sm">
-                        <div class="flex justify-between font-semibold text-gray-700 mb-1">
-                            <span><i class="far fa-calendar-alt mr-1"></i> ${item.date}</span>
-                            <span class="${item.status.includes('-') || item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') ? 'text-red-500' : 'text-ns-blue'}">${item.status}</span>
+                    // กำหนดสีและแถบสัญลักษณ์ตามความรุนแรง
+                    const isAlert = item.status.includes('ขาด') || item.status.includes('หนี') || item.status.includes('สาย') || item.status.includes('-');
+                    const colorClass = isAlert ? 'text-red-500' : 'text-ns-blue';
+                    const bgClass = isAlert ? 'bg-red-50' : 'bg-blue-50';
+                    const borderLeft = isAlert ? 'bg-red-400' : 'bg-ns-blue';
+
+                    html += `<div class="p-3 bg-white rounded-xl border border-gray-100 mb-3 text-sm shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${borderLeft}"></div>
+                        
+                        <div class="pl-2 flex justify-between items-center font-semibold text-gray-700 mb-2 border-b border-gray-50 pb-1.5">
+                            <span class="${colorClass} flex items-center gap-1.5"><i class="far fa-calendar-alt"></i> ${item.date}</span>
+                            <span class="${colorClass} ${bgClass} px-2 py-0.5 rounded-md text-xs border ${isAlert ? 'border-red-100' : 'border-blue-100'}">${item.status}</span>
                         </div>
-                        <p class="text-gray-500">${item.detail}</p>
+                        
+                        <p class="pl-2 text-gray-600 text-xs sm:text-sm leading-relaxed">${item.detail}</p>
                     </div>`;
                 });
                 document.getElementById('modal-content').innerHTML = html;
             } else {
-                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
+                document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-200"></i><p>ไม่พบประวัติข้อมูล</p></div>';
             }
         }
 
         function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden-view'); }
 
+        // --- ฟังก์ชันเปิด/ปิด QR Code ประจำตัว ---
         function openQrModal() {
             if (!currentUser || currentUser.role !== 'student') return;
             
             const u = currentUser.data;
             const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
             
+            // ใส่ข้อมูลในป๊อปอัป
             document.getElementById('qr-stu-id').innerText = cleanId;
             document.getElementById('qr-stu-name').innerText = u.name;
             document.getElementById('qr-stu-room').innerText = "ชั้น " + u.room;
             
+            // สร้าง QR Code ผ่าน API
             document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${cleanId}`;
+            
+            // แสดงป๊อปอัป
             document.getElementById('qr-modal').classList.remove('hidden-view');
         }
 
@@ -1944,6 +2144,7 @@
             document.getElementById('qr-modal').classList.add('hidden-view'); 
         }
 
+        // --- Registration Flow Logic ---
         function updateRegProgress() {
             const width = ((currentRegStep - 1) / 2) * 100;
             document.getElementById('reg-progress').style.width = width + '%';
@@ -1997,6 +2198,7 @@
             updateRegProgress();
         }
 
+        
         function prevRegStep(step) {
             document.getElementById(`reg-step-${currentRegStep}`).classList.add('hidden-view');
             currentRegStep = step;
@@ -2071,6 +2273,7 @@
         async function loadClubs() {
             const tableBody = document.getElementById('club-list-body');
             
+            // [ใหม่] ตรวจสอบสวิตช์ปิดระบบหลักก่อน
             if (systemSettings && systemSettings.isOpenClub === false) {
                 if (clubInterval) clearInterval(clubInterval);
                 tableBody.innerHTML = `
@@ -2101,41 +2304,50 @@
             }
 
             const cacheKey = 'ns_club_list_data';
-            const cachedData = sessionStorage.getItem(cacheKey);
+            const timeKey = 'ns_club_time';
+            
+            // [ปรับปรุง] เปลี่ยนมาใช้ localStorage
+            const cachedData = localStorage.getItem(cacheKey);
             
             if (cachedData) {
                 renderClubsUI(JSON.parse(cachedData), true);
-                fetchClubsSilent(); 
             } else {
-                if (isFetchingClubs) return;
-                isFetchingClubs = true;
                 tableBody.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center text-gray-500 w-full"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังโหลดข้อมูลชุมนุม...</p></div>';
                 try {
                     const res = await apiCall('getClubs', {});
                     if (!currentUser) return; 
 
                     if(res.status === 'success') {
-                        sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                        localStorage.setItem(timeKey, Date.now().toString());
                         renderClubsUI(res.data, false);
                     }
-                } catch(e) {} finally {
-                    isFetchingClubs = false;
-                }
+                } catch(e) {}
             }
         }
 
-        async function fetchClubsSilent() {
-            if (!currentUser || isFetchingClubs) return;
-            isFetchingClubs = true;
+        async function forceRefreshClubs() {
+            if (!currentUser) return;
+            const icon = document.getElementById('icon-refresh-clubs');
+            const cacheKey = 'ns_club_list_data';
+            const timeKey = 'ns_club_time';
+            
+            if (icon) icon.classList.add('fa-spin');
+            
             try {
                 const res = await apiCall('getClubs', {});
                 if(res.status === 'success' && currentUser) {
-                    const cacheKey = 'ns_club_list_data';
-                    sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                    localStorage.setItem(timeKey, Date.now().toString());
                     renderClubsUI(res.data, false);
+                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลชุมนุมล่าสุดเรียบร้อยแล้ว', 'success');
+                } else {
+                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
                 }
-            } catch (e) { } finally {
-                isFetchingClubs = false;
+            } catch (e) { 
+                handleErrorAlert(e);
+            } finally {
+                if (icon) icon.classList.remove('fa-spin');
             }
         }
 
@@ -2225,9 +2437,7 @@
 
         async function confirmClubRegistration() {
             closeClubModal();
-            showLoading();
-            // 🚀 อัปเดตข้อความ ป้องกันนักเรียนตกใจแล้วกดปิดแอปหนีตอนกำลังเข้าคิว
-            document.getElementById('loading-text').innerText = "กำลังเข้าคิวแย่งที่นั่งชุมนุม (ห้ามปิดหน้าจอเด็ดขาด)...";
+            navApp('dashboard'); 
             
             const club = clubDataList.find(c => c.id === selectedClubId);
             const u = currentUser.data;
@@ -2265,7 +2475,9 @@
                 equipment: club.equipment
             };
 
-            apiCall('registerClub', payload).then(res => {
+            // โยนเข้า Firebase อัตโนมัติ ป้องกันคิวเกิน
+            while (!window.registerFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
+            window.registerFirebaseClub(payload).then(res => {
                 if(res.status === 'success') {
                     localStorage.setItem(cacheKey, JSON.stringify(currentStats));
                     localStorage.removeItem('ns_club_list_data');
@@ -2285,9 +2497,8 @@
                 currentStats.currentClub = oldClub;
                 updateStatsUI(currentStats);
                 if(dashSyncTime) updateSyncTime('dash-sync-time');
-                handleErrorAlert(e);
+                showAlert('เกิดข้อผิดพลาด', 'ระบบบันทึกไม่สำเร็จ', 'error');
             });
-            hideLoading();
         }
 
         async function openChangeClubModal() {
@@ -2295,14 +2506,24 @@
             document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังโหลดข้อมูล...</p></div>';
             
             try {
-                const res = await apiCall('getClubs', {});
-                if(res.status === 'success') {
-                    clubDataList = res.data;
+                // เปลี่ยนเป็นดึงจาก Firebase
+                while (!window.fetchFirebaseClubs) { await new Promise(r => setTimeout(r, 50)); }
+                const clubsData = await window.fetchFirebaseClubs();
+                
+                if(clubsData && clubsData.length > 0) {
+                    clubDataList = clubsData;
                     let html = '';
-                    res.data.forEach(c => {
+                    let availableCount = 0;
+                    
+                    clubsData.forEach(c => {
                         const remains = c.max - c.reg;
                         const isFull = remains <= 0;
                         const isCurrent = studentCurrentClub && studentCurrentClub.id === c.id;
+                        
+                        // 🚀 ซ่อนชุมนุมที่เต็มแล้ว (ยกเว้นชุมนุมปัจจุบันที่ตัวเองอยู่ เพื่อให้เห็นเป็นรายการเดิมได้)
+                        if (isFull && !isCurrent) return;
+                        
+                        availableCount++;
                         
                         const teachers = c.teacher.split(',').map(t => {
                             let name = t.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '').trim();
@@ -2341,29 +2562,33 @@
                                     </div>
                                     <div>
                                         <p class="text-[10px] text-gray-500 font-medium mb-0.5">คงเหลือ</p>
-                                        <p class="font-bold ${isFull && !isCurrent ? 'text-red-500' : 'text-green-600'} text-sm">${remains}</p>
+                                        <p class="font-bold ${isCurrent ? 'text-green-600' : 'text-green-600'} text-sm">${remains}</p>
                                     </div>
                                 </div>
                                 
                                 <div class="w-full bg-gray-200 rounded-full h-1.5 mt-3 overflow-hidden">
-                                    <div class="bg-gradient-to-r ${isFull && !isCurrent ? 'from-red-400 to-red-600' : 'from-purple-400 to-ns-blue'} h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                                    <div class="bg-gradient-to-r ${isCurrent ? 'from-green-400 to-green-600' : 'from-purple-400 to-ns-blue'} h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                                 </div>
                             </div>
                             
                             <div class="w-full sm:w-auto flex flex-col items-center justify-center pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l ${isCurrent ? 'border-green-200' : 'border-gray-100'} sm:pl-5 mt-2 sm:mt-0">
                                 ${isCurrent ? 
                                     `<button disabled class="w-full sm:w-auto bg-green-100 text-green-600 px-5 py-3 rounded-xl text-sm font-bold border border-green-200 cursor-not-allowed flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i> ชุมนุมปัจจุบัน</button>` :
-                                 isFull ? 
-                                    `<button disabled class="w-full sm:w-auto bg-red-50 text-red-500 px-5 py-3 rounded-xl text-sm font-bold border border-red-100 cursor-not-allowed flex items-center justify-center gap-2"><i class="fas fa-ban"></i> เต็มแล้ว</button>` :
                                     `<button onclick="promptConfirmChange('${c.id}')" class="w-full sm:w-auto bg-ns-orange hover:bg-orange-600 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fas fa-exchange-alt"></i> สมัครเปลี่ยนชุมนุมนี้</button>`
                                 }
                             </div>
                         </div>`;
                     });
+                    
+                    if (availableCount === 0) {
+                        html = '<div class="text-center py-8 text-gray-500"><p>ขณะนี้ทุกชุมนุมเต็มหมดแล้ว</p></div>';
+                    }
                     document.getElementById('change-club-list-body').innerHTML = html;
+                } else {
+                    document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-red-500"><p>ไม่พบข้อมูลชุมนุมในระบบ</p></div>';
                 }
             } catch(e) {
-                document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-red-500"><p>เกิดข้อผิดพลาดในการโหลดข้อมูล...</p></div>';
+                document.getElementById('change-club-list-body').innerHTML = '<div class="text-center py-8 text-red-500"><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
             }
         }
         
@@ -2379,7 +2604,8 @@
 
         async function executeClubChange() {
             document.getElementById('confirm-change-modal').classList.add('hidden-view');
-            showLoading();
+            closeChangeClubModal();
+            navApp('dashboard'); 
             
             const club = clubDataList.find(c => c.id === newSelectedClubId);
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim(); 
@@ -2408,6 +2634,7 @@
                 studentId: cleanId, 
                 studentName: currentUser.data.name,
                 room: currentUser.data.room,
+                oldClubName: oldClub ? oldClub.name : "-", // เพิ่มการส่งชื่อชุมนุมเดิมไปลบด้วย
                 newClubId: club.id,
                 newClubName: club.name,
                 newTeacher: club.teacher,
@@ -2416,7 +2643,9 @@
                 newEquipment: club.equipment
             };
 
-            apiCall('changeClub', payload).then(res => {
+            // เรียก Firebase เปลี่ยนชุมนุมโดยทำ Transaction เพื่อปลดคิวเดิมเข้าคิวใหม่
+            while (!window.changeFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
+            window.changeFirebaseClub(payload).then(res => {
                 if(res.status === 'success') {
                     localStorage.setItem(cacheKey, JSON.stringify(currentStats));
                     localStorage.removeItem('ns_club_list_data');
@@ -2436,272 +2665,8 @@
                 currentStats.currentClub = oldClub;
                 updateStatsUI(currentStats);
                 if(dashSyncTime) updateSyncTime('dash-sync-time');
-                handleErrorAlert(e);
+                showAlert('เกิดข้อผิดพลาด', 'ระบบสลับคิวชุมนุมไม่สำเร็จ', 'error');
             });
-        }
-
-        // --- Schedule Logic ---
-        let isFetchingSchedule = false;
-
-        async function openScheduleModal() {
-            if (!currentUser) return;
-            const u = currentUser.data;
-            document.getElementById('schedule-modal').classList.remove('hidden-view');
-            document.getElementById('schedule-room-title').innerText = u.room || "-";
-            
-            const contentDiv = document.getElementById('schedule-content');
-            contentDiv.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลตารางเรียน...</p></div>';
-
-            try {
-                const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
-                const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
-                
-                let res = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-                
-                if (!res) {
-                    if (isFetchingSchedule) return;
-                    isFetchingSchedule = true;
-                    try {
-                        res = await apiCall('getSchedule', { room: u.room, studentId: cleanId });
-                        if (res.status === 'success' || res.status === 'missing_plan') {
-                            sessionStorage.setItem(cacheKey, JSON.stringify(res));
-                        }
-                    } finally {
-                        isFetchingSchedule = false;
-                    }
-                }
-                
-                if (res && res.status === 'success') {
-                    renderScheduleUI(res.data);
-                } else if (res && res.status === 'missing_plan') {
-                    contentDiv.innerHTML = `
-                        <div class="text-center py-8 flex flex-col items-center">
-                            <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-4xl mb-4 shadow-inner">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">ไม่พบข้อมูลแผนการเรียน</h3>
-                            <p class="text-sm text-gray-600 mb-8 leading-relaxed max-w-sm">
-                                นักเรียนยังไม่กรอกข้อมูลขึ้นทะเบียนนักเรียนในระบบ ทำให้ไม่สามารถดึงตารางเรียนที่ตรงกับแผนการเรียนของคุณได้
-                            </p>
-                            <a href="https://krutaskeen-max.github.io/-/" target="_blank" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-ns-orange to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 w-full sm:w-auto">
-                                <i class="fas fa-external-link-alt"></i> ไปกรอกข้อมูลขึ้นทะเบียน
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    contentDiv.innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p>${res.message || 'ไม่พบข้อมูลตารางเรียน'}</p></div>`;
-                }
-            } catch (error) {
-                contentDiv.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-wifi text-3xl mb-3"></i><p>เกิดข้อผิดพลาดในการเชื่อมต่อ</p></div>';
-            }
-        }
-
-        function closeScheduleModal() {
-            document.getElementById('schedule-modal').classList.add('hidden-view');
-        }
-
-        window.switchScheduleDay = function(day) {
-            document.querySelectorAll('.schedule-day-tab').forEach(el => {
-                if (el.dataset.day === day) {
-                    el.classList.remove('bg-gray-100', 'text-gray-600');
-                    el.classList.add('bg-ns-blue', 'text-white', 'shadow-md');
-                } else {
-                    el.classList.add('bg-gray-100', 'text-gray-600');
-                    el.classList.remove('bg-ns-blue', 'text-white', 'shadow-md');
-                }
-            });
-            document.querySelectorAll('.schedule-day-content').forEach(el => {
-                if (el.dataset.day === day) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
-        };
-
-        function renderScheduleUI(data) {
-            const contentDiv = document.getElementById('schedule-content');
-            if (!data || data.length === 0) {
-                contentDiv.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i><p>ไม่พบตารางเรียนสำหรับห้องนี้</p></div>';
-                return;
-            }
-
-            const scheduleByDay = {};
-            const daysOrder = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"];
-            
-            data.forEach(item => {
-                if (!scheduleByDay[item.day]) scheduleByDay[item.day] = [];
-                
-                const existing = scheduleByDay[item.day].find(x => x.period === item.period && x.code === item.code);
-                if (existing) {
-                    if (!existing.teacher.includes(item.teacher) && item.teacher !== "-" && item.teacher !== "") {
-                        existing.teacher += ", " + item.teacher;
-                    }
-                } else {
-                    scheduleByDay[item.day].push(item);
-                }
-            });
-
-            const now = new Date();
-            const daysMap = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-            const currentDayStr = daysMap[now.getDay()];
-            
-            const scheduleConfig = { duration: 50, startHour: 8, startMin: 20, break_period: 5, break_duration: 70 };
-            const startMins = (scheduleConfig.startHour * 60) + scheduleConfig.startMin; 
-            const currentMins = now.getHours() * 60 + now.getMinutes();
-
-            let currentPeriod = -1;
-
-            if (currentMins >= startMins) {
-                const elapsedMins = currentMins - startMins; 
-                const minsBeforeBreak = (scheduleConfig.break_period - 1) * scheduleConfig.duration; 
-
-                if (elapsedMins < minsBeforeBreak) {
-                    currentPeriod = Math.floor(elapsedMins / scheduleConfig.duration) + 1;
-                } else if (elapsedMins >= minsBeforeBreak && elapsedMins < minsBeforeBreak + scheduleConfig.break_duration) {
-                    currentPeriod = -1; 
-                } else {
-                    const afterBreakElapsed = elapsedMins - (minsBeforeBreak + scheduleConfig.break_duration);
-                    currentPeriod = Math.floor(afterBreakElapsed / scheduleConfig.duration) + scheduleConfig.break_period;
-                }
-            }
-
-            let activeDay = scheduleByDay[currentDayStr] ? currentDayStr : "จันทร์";
-
-            let html = '<div class="w-full">';
-            
-            html += '<div class="flex overflow-x-auto gap-2 pb-3 mb-4" style="scrollbar-width: none; -ms-overflow-style: none;">';
-            daysOrder.forEach(day => {
-                if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
-                    const isActive = day === activeDay;
-                    const btnClass = isActive ? 'bg-ns-blue text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200';
-                    const todayIndicator = day === currentDayStr ? '<div class="w-2 h-2 rounded-full bg-ns-orange absolute -top-0.5 -right-0.5 shadow-sm border border-white animate-pulse"></div>' : '';
-                    
-                    html += `
-                        <button onclick="switchScheduleDay('${day}')" data-day="${day}" class="schedule-day-tab relative px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${btnClass}">
-                            วัน${day} ${todayIndicator}
-                        </button>
-                    `;
-                }
-            });
-            html += '</div>';
-            
-            daysOrder.forEach(day => {
-                if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
-                    const isHidden = day === activeDay ? '' : 'hidden';
-                    html += `<div data-day="${day}" class="schedule-day-content ${isHidden} space-y-3 pb-4">`;
-                    
-                    scheduleByDay[day].sort((a, b) => a.period - b.period);
-                    
-                    scheduleByDay[day].forEach(subj => {
-                        const isCurrentPeriod = (day === currentDayStr && subj.period === currentPeriod);
-                        
-                        const cardStyle = isCurrentPeriod 
-                            ? 'bg-orange-50 border-ns-orange ring-2 ring-orange-200 shadow-md transform scale-[1.02] transition-transform' 
-                            : 'bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow';
-                            
-                        const periodBoxStyle = isCurrentPeriod 
-                            ? 'bg-ns-orange text-white border-ns-orange shadow-inner' 
-                            : 'bg-gray-50 text-gray-700 border-gray-200';
-                            
-                        const pulsingBadge = isCurrentPeriod 
-                            ? '<span class="absolute top-3 right-3 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-ns-orange"></span></span>' 
-                            : '';
-
-                        html += `
-                            <div class="relative p-3 rounded-2xl border ${cardStyle} flex items-center gap-3 overflow-hidden">
-                                ${pulsingBadge}
-                                <div class="w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border ${periodBoxStyle}">
-                                    <span class="text-[9px] font-medium opacity-80 -mb-1">คาบ</span>
-                                    <span class="font-bold text-lg">${subj.period}</span>
-                                </div>
-                                <div class="flex-1 min-w-0 pr-4">
-                                    <h4 class="font-bold text-sm text-gray-800 leading-tight truncate ${isCurrentPeriod ? 'text-ns-orange' : ''}">${subj.code} ${subj.name}</h4>
-                                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[10px] text-gray-500">
-                                        <span class="flex items-center gap-1 ${isCurrentPeriod ? 'text-orange-700 font-medium' : ''}"><i class="fas fa-chalkboard-teacher opacity-70"></i> ${subj.teacher || '-'}</span>
-                                        <span class="flex items-center gap-1 ${isCurrentPeriod ? 'text-orange-700 font-medium' : ''}"><i class="fas fa-map-marker-alt opacity-70 text-ns-blue"></i> ${subj.location || '-'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    html += `</div>`;
-                }
-            });
-            
-            html += '</div>';
-            contentDiv.innerHTML = html;
-        }
-
-        async function loadCurrentPeriodBanner() {
-            if (!currentUser || currentUser.role === 'admin') return;
-            const u = currentUser.data;
-            if (!u.room || u.room === "-") return;
-            
-            const cleanId = String(u.id).replace(/_p|_P/gi, '').trim();
-            const cacheKey = 'ns_schedule_' + u.room + '_' + cleanId;
-            let scheduleRes = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-            
-            if (!scheduleRes) {
-                // 🚀 [Lite Mode] ปิดการแอบโหลดตารางเรียนมาเพื่อโชว์ไฮไลต์คาบปัจจุบัน (ประหยัด API มหาศาล)
-                // ตารางเรียนจะถูกดึง ก็ต่อเมื่อเด็ก "ตั้งใจคลิกไอคอนตารางเรียนบนขวา" เท่านั้น
-                return;
-            }
-            
-            if (scheduleRes && scheduleRes.status === 'success' && scheduleRes.data) {
-                updateCurrentPeriodBannerUI(scheduleRes.data);
-                setInterval(() => updateCurrentPeriodBannerUI(scheduleRes.data), 15000); 
-            }
-        }
-
-        function updateCurrentPeriodBannerUI(data) {
-            const banner = document.getElementById('current-period-banner');
-            if (!banner || !data || data.length === 0) return;
-            
-            const now = new Date();
-            const daysMap = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-            const currentDayStr = daysMap[now.getDay()];
-            
-            const scheduleConfig = { duration: 50, startHour: 8, startMin: 20, break_period: 5, break_duration: 70 };
-            const startMins = (scheduleConfig.startHour * 60) + scheduleConfig.startMin;
-            const currentMins = now.getHours() * 60 + now.getMinutes();
-
-            let currentPeriod = -1;
-
-            if (currentMins >= startMins) {
-                const elapsedMins = currentMins - startMins;
-                const minsBeforeBreak = (scheduleConfig.break_period - 1) * scheduleConfig.duration; 
-
-                if (elapsedMins < minsBeforeBreak) {
-                    currentPeriod = Math.floor(elapsedMins / scheduleConfig.duration) + 1;
-                } else if (elapsedMins >= minsBeforeBreak && elapsedMins < minsBeforeBreak + scheduleConfig.break_duration) {
-                    currentPeriod = -1; 
-                } else {
-                    const afterBreakElapsed = elapsedMins - (minsBeforeBreak + scheduleConfig.break_duration);
-                    currentPeriod = Math.floor(afterBreakElapsed / scheduleConfig.duration) + scheduleConfig.break_period;
-                }
-            }
-            
-            if (currentPeriod > 0) {
-                 const todaysSchedule = data.filter(item => item.day === currentDayStr);
-                 const matched = todaysSchedule.filter(item => item.period === currentPeriod);
-                 
-                 if (matched.length > 0) {
-                     let currentSubj = { ...matched[0] };
-                     if (matched.length > 1) {
-                         const teachers = matched.map(m => m.teacher).filter(t => t && t !== '-');
-                         const uniqueTeachers = [...new Set(teachers)];
-                         currentSubj.teacher = uniqueTeachers.join(', ');
-                     }
-                     
-                     document.getElementById('current-period-subject').innerText = currentSubj.code + " " + currentSubj.name;
-                     document.getElementById('current-period-teacher').innerText = currentSubj.teacher || '-';
-                     document.getElementById('current-period-location').innerText = currentSubj.location || '-';
-                     document.getElementById('current-period-time').innerText = currentPeriod;
-                     
-                     banner.classList.remove('hidden-view');
-                     return;
-                 }
-            }
-            banner.classList.add('hidden-view');
         }
 
         document.getElementById('set-logo-file').addEventListener('change', function(e) {
@@ -2712,6 +2677,8 @@
                     const img = new Image(); 
                     img.onload = function() {
                         const canvas = document.createElement('canvas'); 
+                        
+                        // บีบอัดภาพให้อยู่ในขนาดสูงสุด 150px เพื่อให้รหัส Base64 ไม่เกินข้อจำกัดของ Google Sheets (50,000 ตัวอักษร)
                         const maxSize = 150; 
                         let width = img.width;
                         let height = img.height;
@@ -2732,8 +2699,11 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d'); 
                         
+                        // [แก้ไข] เคลียร์พื้นหลังให้โปร่งใส (รักษาพื้นหลังของภาพ PNG เดิมไว้)
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // [แก้ไข] แปลงเป็นรูปแบบ WebP (คงความโปร่งใสและบีบอัดขนาดไฟล์ได้ดีเยี่ยม) 
                         const base64Str = canvas.toDataURL('image/webp', 0.8); 
                         
                         document.getElementById('setting-logo-preview').src = base64Str; 
@@ -2754,7 +2724,7 @@
                 logoUrl: document.getElementById('logo-base64').value, 
                 clubStartDate: document.getElementById('setting-club-start').value,
                 clubEndDate: document.getElementById('setting-club-end').value,
-                isOpenClub: document.getElementById('setting-club-status').checked, 
+                isOpenClub: document.getElementById('setting-club-status').checked, // ดึงสถานะเปิดปิดชุมนุม
                 allowChangeClub: document.getElementById('setting-allow-change-club').checked ? "อนุญาต" : "ไม่อนุญาต",
                 showAnnouncement: document.getElementById('setting-show-announcement').checked,
                 announcementText: document.getElementById('setting-announcement-text').value,
@@ -2787,6 +2757,7 @@
                         endDate: payload.clubEndDate
                     };
                     
+                    // อัปเดตข้อมูลแคชทันทีที่บันทึกเสร็จ
                     localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
                     
                     if (currentUser && currentUser.role === 'admin') {
