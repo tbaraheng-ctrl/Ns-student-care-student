@@ -296,6 +296,11 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 ml-2 shrink-0">
+                <!-- 🚀 ปุ่มล้างแคช (ปรับให้ใหญ่และเป็นสีส้มเด่นชัดขึ้น เพื่อเช็คว่าอัปเดตเว็บสำเร็จ) -->
+                <button onclick="clearSystemCache()" class="flex items-center gap-1.5 text-white bg-ns-orange hover:bg-orange-600 px-3 py-2 rounded-full shadow-md transition-all active:scale-95 border border-orange-400" title="ล้างแคชและโหลดข้อมูลใหม่">
+                    <i class="fas fa-broom text-base"></i>
+                    <span class="text-[10px] font-bold">ล้างแคช</span>
+                </button>
                 <!-- เพิ่มปุ่ม QR Code -->
                 <button id="btn-show-qr" onclick="openQrModal()" class="hidden-view text-ns-blue hover:text-blue-600 p-2.5 sm:p-3 bg-blue-50 rounded-full hover:bg-blue-100 transition shadow-sm">
                     <i class="fas fa-qrcode text-lg"></i>
@@ -879,7 +884,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // 🚀 [แก้ไข] เพิ่มการ import คำสั่ง doc และ runTransaction ที่ขาดหายไป
+        import { getFirestore, collection, query, where, getDocs, doc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ตั้งค่า Firebase ตามที่คุณกำหนด
         const firebaseConfig = {
@@ -911,100 +917,169 @@
             };
 
             try {
+                const cleanStudentId = String(studentId).trim();
+                let roomSnap, attSnap, leaveSnap, bhSnap, regSnap;
+
+                // แยกดึงทีละฐานข้อมูล ป้องกันกรณีฐานข้อมูลใดพัง
+                try { roomSnap = await getDocs(collection(db, "room_records")); } catch(e) {}
+                try { attSnap = await getDocs(collection(db, "attendance_records")); } catch(e) {}
+                try { leaveSnap = await getDocs(collection(db, "leave_requests")); } catch(e) {}
+                try { bhSnap = await getDocs(collection(db, "behavior_records")); } catch(e) {}
+                try { regSnap = await getDocs(collection(db, "clubs_data")); } catch(e) {}
+
+                // 🚀 ฟังก์ชันผู้ช่วยสุดฉลาด: สกัดข้อมูลได้ทุกโครงสร้าง (Array, Object, หรือ Map ซ้อนอยู่ข้างนอกสุด)
+                const extractItems = (data) => {
+                    if (!data) return [];
+                    if (data.records) return Array.isArray(data.records) ? data.records : Object.values(data.records);
+                    if (data["เลขประจำตัว"] !== undefined || data["รหัสประจำตัว"] !== undefined || data["id"] !== undefined) return [data];
+                    // ค้นหา Map ที่ซ้อนอยู่ข้างนอกสุด (กรณีที่ Key เป็นตัวเลข 0, 1, 2...)
+                    return Object.values(data).filter(v => v && typeof v === 'object' && (v["เลขประจำตัว"] !== undefined || v["รหัสประจำตัว"] !== undefined || v["id"] !== undefined));
+                };
+
                 // ก. room_records (สแกนเข้า-ออก, มาสายโรงเรียน)
-                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'เลขประจำตัว'
-                const roomSnap = await getDocs(collection(db, "room_records"));
-                roomSnap.forEach(doc => {
-                    const data = doc.data();
-                    const records = data.records || [];
-                    if (Array.isArray(records)) {
-                        records.forEach(rec => {
-                            if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                if (roomSnap) {
+                    roomSnap.forEach(doc => {
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["เลขประจำตัว"] || rec["รหัสประจำตัว"] || rec["id"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
                                 stats.scanTotal++;
-                                if (rec["ประเภท(เข้า/ออก)"] === "เข้า") stats.scanIn++;
-                                if (rec["ประเภท(เข้า/ออก)"] === "ออก") stats.scanOut++;
-                                if (rec["สถานะ"] === "สาย") stats.lateSchool++;
+                                const type = String(rec["ประเภท(เข้า/ออก)"] || rec["ประเภท"] || rec["type"] || "").trim();
+                                const status = String(rec["สถานะ"] || rec["status"] || "").trim();
+                                if (type === "เข้า" || type === "in") stats.scanIn++;
+                                if (type === "ออก" || type === "out") stats.scanOut++;
+                                if (status === "สาย" || status === "late") stats.lateSchool++;
                             }
                         });
-                    }
-                });
+                    });
+                }
 
                 // ข. attendance_records (ขาดเรียน, มาสายรายวิชา, หนีเรียน, ม.ส.)
-                // โครงสร้าง: records เป็น Map (Object), ใช้ Key เป็นรหัสนักเรียน
-                let attSnap;
                 const msMap = {};
-                
-                if (studentRoom && studentRoom !== "-" && studentRoom !== "ไม่ระบุ") {
-                    const attQ = query(collection(db, "attendance_records"), where("room", "==", String(studentRoom)));
-                    attSnap = await getDocs(attQ);
-                } else {
-                    attSnap = await getDocs(collection(db, "attendance_records"));
-                }
-                
-                attSnap.forEach(doc => {
-                    const data = doc.data();
-                    const records = data.records || {};
-                    const stuRecord = records[String(studentId)] || records[Number(studentId)];
-                    
-                    if (stuRecord) {
-                        const status = String(stuRecord.status || "").trim();
-                        if (status.includes("ขาด")) stats.missedClass++;
-                        if (status.includes("สาย")) stats.lateClass++;
-                        if (status.includes("หนี")) stats.skippedClass++;
+                if (attSnap) {
+                    attSnap.forEach(doc => {
+                        const data = doc.data();
                         
-                        if (status.includes("ขาด") || status.includes("หนี")) {
-                            const code = data.subjectCode || "ไม่ระบุ";
-                            if (!msMap[code]) {
-                                msMap[code] = { 
-                                    code: code, 
-                                    name: data.subjectName || "", 
-                                    teacher: data.teacherName || "", 
-                                    count: 0, 
-                                    remediated: false 
-                                };
+                        let stuRecord = null;
+                        if (data.records) {
+                            if (Array.isArray(data.records)) {
+                                stuRecord = data.records.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                            } else if (typeof data.records === 'object') {
+                                stuRecord = data.records[cleanStudentId] || data.records[Number(cleanStudentId)];
+                                if (!stuRecord) {
+                                    const vals = Object.values(data.records);
+                                    stuRecord = vals.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                                }
                             }
-                            msMap[code].count++;
-                            if (stuRecord.remediated) msMap[code].remediated = true;
+                        } else {
+                            const id = String(data["เลขประจำตัว"] || data["รหัสประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
+                                stuRecord = data;
+                            } else {
+                                stuRecord = data[cleanStudentId] || data[Number(cleanStudentId)];
+                                if (!stuRecord) {
+                                    const vals = Object.values(data).filter(v => v && typeof v === 'object');
+                                    stuRecord = vals.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                                }
+                            }
                         }
+
+                        if (stuRecord) {
+                            const status = String(stuRecord.status || "").trim();
+                            if (status.includes("ขาด")) stats.missedClass++;
+                            if (status.includes("สาย")) stats.lateClass++;
+                            if (status.includes("หนี")) stats.skippedClass++;
+                            
+                            if (status.includes("ขาด") || status.includes("หนี")) {
+                                const code = String(data.subjectCode || stuRecord.subjectCode || "ไม่ระบุ").trim();
+                                if (!msMap[code]) {
+                                    msMap[code] = { 
+                                        code: code, 
+                                        name: String(data.subjectName || stuRecord.subjectName || "").trim(), 
+                                        teacher: String(data.teacherName || stuRecord.teacherName || "").trim(), 
+                                        count: 0, 
+                                        missed: 0,
+                                        skipped: 0,
+                                        remediated: false 
+                                    };
+                                }
+                                msMap[code].count++;
+                                if (status.includes("ขาด")) msMap[code].missed++;
+                                if (status.includes("หนี")) msMap[code].skipped++;
+                                
+                                if (stuRecord.remediated) msMap[code].remediated = true;
+                            }
+                        }
+                    });
+                }
+
+                for (let key in msMap) {
+                    if (msMap[key].count >= 4) {
+                        stats.msDetails.push(msMap[key]);
                     }
-                });
+                }
+                stats.msDetails.sort((a, b) => b.count - a.count);
 
                 // ค. leave_requests (ลาป่วย/ลากิจ)
-                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'รหัสประจำตัว'
-                const leaveSnap = await getDocs(collection(db, "leave_requests"));
-                leaveSnap.forEach(doc => {
-                    const data = doc.data();
-                    const records = data.records || [];
-                    if (Array.isArray(records)) {
-                        records.forEach(rec => {
-                            if (String(rec["รหัสประจำตัว"]) === String(studentId)) {
+                if (leaveSnap) {
+                    leaveSnap.forEach(doc => {
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["รหัสประจำตัว"] || rec["เลขประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
                                 stats.leaveTotal++;
-                                if (rec["ประเภทการลา"] === "ลาป่วย") stats.leaveSick++;
-                                if (rec["ประเภทการลา"] === "ลากิจ") stats.leavePersonal++;
+                                const lType = String(rec["ประเภทการลา"] || "").trim();
+                                if (lType === "ลาป่วย" || lType.includes("ป่วย")) stats.leaveSick++;
+                                if (lType === "ลากิจ" || lType.includes("กิจ")) stats.leavePersonal++;
                             }
                         });
-                    }
-                });
+                    });
+                }
 
                 // ง. behavior_records (คะแนนพฤติกรรม)
-                // โครงสร้าง: records เป็น Array ของ Object, ใช้ฟิลด์ 'เลขประจำตัว'
-                const bhSnap = await getDocs(collection(db, "behavior_records"));
-                bhSnap.forEach(doc => {
-                    const data = doc.data();
-                    const records = data.records || [];
-                    if (Array.isArray(records)) {
-                        records.forEach(rec => {
-                            if (String(rec["เลขประจำตัว"]) === String(studentId)) {
+                if (bhSnap) {
+                    bhSnap.forEach(doc => {
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["เลขประจำตัว"] || rec["รหัสประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
                                 const score = Math.abs(Number(rec["คะแนน"]) || 0);
                                 const type = String(rec["ประเภทคะแนน"] || "").trim();
                                 if (type === "บวก" || type === "เพิ่ม") stats.bhPlus += score;
                                 if (type === "ลบ" || type === "หัก") stats.bhMinus += score;
                             }
                         });
-                    }
-                });
+                    });
+                }
+
+                // จ. clubs_data (ค้นหาชุมนุมปัจจุบันที่นักเรียนอยู่)
+                if (regSnap) {
+                    regSnap.forEach(doc => {
+                        const data = doc.data();
+                        const students = data['นักเรียน'] || [];
+                        const items = Array.isArray(students) ? students : Object.values(students);
+                        
+                        const stuRecord = items.find(s => String(s['เลขประจำตัว'] || s['รหัสประจำตัว'] || "").trim() === cleanStudentId);
+                        if (stuRecord) {
+                            stats.currentClub = {
+                                id: String(stuRecord['รหัสกิจกรรม'] || "-"),
+                                name: String(data['ชื่อชุมนุม'] || "-"),
+                                regDate: String(stuRecord['วันที่ลงทะเบียน'] || "-"),
+                                teacher: String(stuRecord['ครูผู้สอน'] || "-"),
+                                objective: String(stuRecord['วัตถุประสงค์'] || "-"),
+                                location: String(stuRecord['สถานที่เรียน'] || "-"),
+                                equipment: String(stuRecord['อุปกรณ์'] || "-")
+                            };
+                        }
+                    });
+                }
+
             } catch (err) {
                 console.error("Firebase stats fetch error:", err);
+                stats.firebaseError = err.message;
             }
             return stats;
         };
@@ -1017,41 +1092,69 @@
 
             const details = [];
             try {
+                const cleanStudentId = String(studentId).trim();
+                
+                const extractItems = (data) => {
+                    if (!data) return [];
+                    if (data.records) return Array.isArray(data.records) ? data.records : Object.values(data.records);
+                    if (data["เลขประจำตัว"] !== undefined || data["รหัสประจำตัว"] !== undefined || data["id"] !== undefined) return [data];
+                    return Object.values(data).filter(v => v && typeof v === 'object' && (v["เลขประจำตัว"] !== undefined || v["รหัสประจำตัว"] !== undefined || v["id"] !== undefined));
+                };
+
                 if (type === 'scan' || type === 'late_school') {
                     const snap = await getDocs(collection(db, "room_records"));
                     snap.forEach(doc => {
-                        const data = doc.data();
-                        const records = data.records || [];
-                        if (Array.isArray(records)) {
-                            records.forEach(rec => {
-                                if (String(rec["เลขประจำตัว"]) === String(studentId)) {
-                                    const dateStr = rec["วันที่"] || "ไม่ระบุวันที่";
-                                    if (type === 'scan') {
-                                        details.push({ date: dateStr, status: rec["ประเภท(เข้า/ออก)"] || "บันทึก", detail: `เวลา: ${rec["เวลาบันทึก"] || "-"}` });
-                                    } else if (type === 'late_school' && rec["สถานะ"] === "สาย") {
-                                        details.push({ date: dateStr, status: "สาย", detail: `เวลา: ${rec["เวลาบันทึก"] || "-"}` });
-                                    }
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["เลขประจำตัว"] || rec["รหัสประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
+                                const dateStr = String(rec["วันที่"] || rec["date"] || "ไม่ระบุวันที่").trim();
+                                const status = String(rec["สถานะ"] || rec["status"] || "").trim();
+                                const scanType = String(rec["ประเภท(เข้า/ออก)"] || rec["ประเภท"] || "บันทึก").trim();
+                                const timeStr = String(rec["เวลาบันทึก"] || rec["time"] || "-").trim();
+                                
+                                if (type === 'scan') {
+                                    details.push({ date: dateStr, status: scanType, detail: `เวลา: ${timeStr}` });
+                                } else if (type === 'late_school' && status === "สาย") {
+                                    details.push({ date: dateStr, status: "สาย", detail: `เวลา: ${timeStr}` });
                                 }
-                            });
-                        }
+                            }
+                        });
                     });
                 }
                 else if (type === 'missed_class' || type === 'late_class' || type === 'skipped_class') {
-                    let snap;
-                    if (studentRoom && studentRoom !== "-" && studentRoom !== "ไม่ระบุ") {
-                        const q = query(collection(db, "attendance_records"), where("room", "==", String(studentRoom)));
-                        snap = await getDocs(q);
-                    } else {
-                        snap = await getDocs(collection(db, "attendance_records"));
-                    }
+                    const snap = await getDocs(collection(db, "attendance_records"));
                     
                     snap.forEach(doc => {
                         const data = doc.data();
-                        const records = data.records || {};
-                        const stuRecord = records[String(studentId)] || records[Number(studentId)];
+                        
+                        let stuRecord = null;
+                        if (data.records) {
+                            if (Array.isArray(data.records)) {
+                                stuRecord = data.records.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                            } else if (typeof data.records === 'object') {
+                                stuRecord = data.records[cleanStudentId] || data.records[Number(cleanStudentId)];
+                                if (!stuRecord) {
+                                    const vals = Object.values(data.records);
+                                    stuRecord = vals.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                                }
+                            }
+                        } else {
+                            const id = String(data["เลขประจำตัว"] || data["รหัสประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
+                                stuRecord = data;
+                            } else {
+                                stuRecord = data[cleanStudentId] || data[Number(cleanStudentId)];
+                                if (!stuRecord) {
+                                    const vals = Object.values(data).filter(v => v && typeof v === 'object');
+                                    stuRecord = vals.find(r => String(r["เลขประจำตัว"] || r["รหัสประจำตัว"] || "").trim() === cleanStudentId);
+                                }
+                            }
+                        }
                         
                         if (stuRecord) {
-                            const status = String(stuRecord.status || "");
+                            const status = String(stuRecord.status || "").trim();
                             let match = false;
                             if (type === 'missed_class' && status.includes("ขาด")) match = true;
                             if (type === 'late_class' && status.includes("สาย")) match = true;
@@ -1059,9 +1162,9 @@
                             
                             if (match) {
                                 details.push({ 
-                                    date: data.date || "ไม่ระบุ", 
+                                    date: String(data.date || stuRecord.date || "ไม่ระบุ").trim(), 
                                     status: status, 
-                                    detail: `วิชา: ${data.subjectCode || ""} ${data.subjectName || ""} | คาบ: ${data.period || "-"} | ครู: ${data.teacherName || "-"}`
+                                    detail: `วิชา: ${data.subjectCode || stuRecord.subjectCode || ""} ${data.subjectName || stuRecord.subjectName || ""} | คาบ: ${data.period || stuRecord.period || "-"} | ครู: ${data.teacherName || stuRecord.teacherName || "-"}`
                                 });
                             }
                         }
@@ -1070,43 +1173,206 @@
                 else if (type === 'leave') {
                     const snap = await getDocs(collection(db, "leave_requests"));
                     snap.forEach(doc => {
-                        const data = doc.data();
-                        const records = data.records || [];
-                        if (Array.isArray(records)) {
-                            records.forEach(rec => {
-                                if (String(rec["รหัสประจำตัว"]) === String(studentId)) {
-                                    details.push({
-                                        date: rec["วันที่"] || "ไม่ระบุ",
-                                        status: rec["ประเภทการลา"] || "แจ้งลา",
-                                        detail: `ผู้บันทึก: ${rec["ผู้บันทึก"] || "-"}`
-                                    });
-                                }
-                            });
-                        }
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["รหัสประจำตัว"] || rec["เลขประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
+                                details.push({
+                                    date: String(rec["วันที่"] || "ไม่ระบุ").trim(),
+                                    status: String(rec["ประเภทการลา"] || "แจ้งลา").trim(),
+                                    detail: `ผู้บันทึก: ${rec["ผู้บันทึก"] || "-"}`
+                                });
+                            }
+                        });
                     });
                 }
                 else if (type === 'behavior') {
                     const snap = await getDocs(collection(db, "behavior_records"));
                     snap.forEach(doc => {
-                        const data = doc.data();
-                        const records = data.records || [];
-                        if (Array.isArray(records)) {
-                            records.forEach(rec => {
-                                if (String(rec["เลขประจำตัว"]) === String(studentId)) {
-                                    details.push({
-                                        date: rec["วันที่"] || "ไม่ระบุ",
-                                        status: rec["ประเภทคะแนน"] || "บันทึก",
-                                        detail: `คะแนน: ${rec["คะแนน"] || 0} | เหตุผล: ${rec["รายการพฤติกรรม"] || "-"}`
-                                    });
-                                }
-                            });
-                        }
+                        const items = extractItems(doc.data());
+                        
+                        items.forEach(rec => {
+                            const id = String(rec["เลขประจำตัว"] || rec["รหัสประจำตัว"] || "").trim();
+                            if (id === cleanStudentId && id !== "") {
+                                details.push({
+                                    date: String(rec["วันที่"] || "ไม่ระบุ").trim(),
+                                    status: String(rec["ประเภทคะแนน"] || "บันทึก").trim(),
+                                    detail: `คะแนน: ${rec["คะแนน"] || 0} | เหตุผล: ${rec["รายการพฤติกรรม"] || "-"}`
+                                });
+                            }
+                        });
                     });
                 }
             } catch (err) {
                 console.error("Firebase details fetch error:", err);
             }
             return details;
+        };
+
+        // 3. [ใหม่] ดึงข้อมูลชุมนุมจาก Firebase แบบสมบูรณ์ (ดึง 2 ฐานข้อมูลพร้อมกันเพื่อให้โหลดเร็ว)
+        window.fetchFirebaseClubs = async function() {
+            const clubs = [];
+            try {
+                if (!auth.currentUser) await signInAnonymously(auth);
+                
+                const [clubSnap, regSnap] = await Promise.all([
+                    getDocs(collection(db, "club_records")),
+                    getDocs(collection(db, "clubs_data"))
+                ]);
+
+                const metadataMap = {};
+                
+                clubSnap.forEach(document => {
+                    const data = document.data();
+                    const cName = String(data.clubName).trim();
+                    metadataMap[cName] = {
+                        id: data.clubCode || String(data.id),
+                        name: cName,
+                        teacher: data.teachers || "-",
+                        objective: data.objective || "-",
+                        location: data.location || "-",
+                        equipment: data.equipment || "-",
+                        max: Number(data.capacity) || 0,
+                        reg: 0
+                    };
+                });
+
+                regSnap.forEach(document => {
+                    const data = document.data();
+                    const cName = String(data['ชื่อชุมนุม']).trim();
+                    if (metadataMap[cName]) {
+                        const students = data['นักเรียน'] || [];
+                        metadataMap[cName].reg = students.length;
+                    }
+                });
+
+                for (let key in metadataMap) {
+                    clubs.push(metadataMap[key]);
+                }
+                clubs.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+                
+            } catch (error) {
+                console.error("Firebase fetch clubs error:", error);
+            }
+            return clubs;
+        };
+
+        // 4. [ใหม่] ลงทะเบียนชุมนุมบน Firebase (ใช้ระบบ Transaction ป้องกันคิวเกิน)
+        window.registerFirebaseClub = async function(payload) {
+            try {
+                if (!auth.currentUser) await signInAnonymously(auth);
+                
+                const clubMetaQ = query(collection(db, "club_records"), where("clubName", "==", payload.clubName));
+                const metaSnap = await getDocs(clubMetaQ);
+                let maxCap = 0;
+                metaSnap.forEach(d => { maxCap = Number(d.data().capacity || 0); });
+
+                const clubDocRef = doc(db, "clubs_data", payload.clubName);
+                
+                await runTransaction(db, async (transaction) => {
+                    const clubDocSnap = await transaction.get(clubDocRef);
+                    let students = [];
+                    if (clubDocSnap.exists()) {
+                        students = clubDocSnap.data()['นักเรียน'] || [];
+                    }
+
+                    if (students.find(s => String(s['เลขประจำตัว']) === String(payload.studentId))) {
+                        throw new Error("คุณลงทะเบียนชุมนุมนี้ไปแล้ว");
+                    }
+
+                    if (maxCap > 0 && students.length >= maxCap) {
+                        throw new Error("เสียใจด้วย! ชุมนุมนี้เต็มแล้ว");
+                    }
+
+                    const newStudentObj = {
+                        "ครูผู้สอน": payload.teacher || "-",
+                        "ชั้น/ห้อง": payload.room || "-",
+                        "ชื่อ-สกุล": payload.studentName || "-",
+                        "รหัสกิจกรรม": payload.clubId || "-",
+                        "ลำดับ": students.length + 1,
+                        "วัตถุประสงค์": payload.objective || "-",
+                        "วันที่ลงทะเบียน": new Date().toLocaleDateString('en-GB'),
+                        "สถานที่เรียน": payload.location || "-",
+                        "อุปกรณ์": payload.equipment || "-",
+                        "เลขประจำตัว": Number(payload.studentId)
+                    };
+
+                    if (!clubDocSnap.exists()) {
+                        transaction.set(clubDocRef, {
+                            "ID": payload.clubName,
+                            "ชื่อชุมนุม": payload.clubName,
+                            "นักเรียน": [newStudentObj]
+                        });
+                    } else {
+                        students.push(newStudentObj);
+                        transaction.update(clubDocRef, { "นักเรียน": students });
+                    }
+                });
+                return { status: 'success' };
+            } catch (error) {
+                console.error(error);
+                return { status: 'error', message: error.message };
+            }
+        };
+
+        // 5. [ใหม่] เปลี่ยนชุมนุมบน Firebase
+        window.changeFirebaseClub = async function(payload) {
+            try {
+                if (!auth.currentUser) await signInAnonymously(auth);
+                
+                const newMetaQ = query(collection(db, "club_records"), where("clubName", "==", payload.newClubName));
+                const newMetaSnap = await getDocs(newMetaQ);
+                let maxCap = 0;
+                newMetaSnap.forEach(d => { maxCap = Number(d.data().capacity || 0); });
+
+                const oldClubRef = doc(db, "clubs_data", payload.oldClubName);
+                const newClubRef = doc(db, "clubs_data", payload.newClubName);
+
+                await runTransaction(db, async (transaction) => {
+                    const newClubSnap = await transaction.get(newClubRef);
+                    let newStudents = newClubSnap.exists() ? (newClubSnap.data()['นักเรียน'] || []) : [];
+
+                    if (maxCap > 0 && newStudents.length >= maxCap) {
+                        throw new Error("เสียใจด้วย! ชุมนุมใหม่ที่เลือกเต็มแล้ว");
+                    }
+
+                    const oldClubSnap = await transaction.get(oldClubRef);
+                    if (oldClubSnap.exists()) {
+                        let oldStudents = oldClubSnap.data()['นักเรียน'] || [];
+                        oldStudents = oldStudents.filter(s => String(s['เลขประจำตัว']) !== String(payload.studentId));
+                        transaction.update(oldClubRef, { "นักเรียน": oldStudents });
+                    }
+
+                    const newStudentObj = {
+                        "ครูผู้สอน": payload.newTeacher || "-",
+                        "ชั้น/ห้อง": payload.room || "-",
+                        "ชื่อ-สกุล": payload.studentName || "-",
+                        "รหัสกิจกรรม": payload.newClubId || "-",
+                        "ลำดับ": newStudents.length + 1,
+                        "วัตถุประสงค์": payload.newObjective || "-",
+                        "วันที่ลงทะเบียน": new Date().toLocaleDateString('en-GB'),
+                        "สถานที่เรียน": payload.newLocation || "-",
+                        "อุปกรณ์": payload.newEquipment || "-",
+                        "เลขประจำตัว": Number(payload.studentId)
+                    };
+
+                    if (!newClubSnap.exists()) {
+                        transaction.set(newClubRef, {
+                            "ID": payload.newClubName,
+                            "ชื่อชุมนุม": payload.newClubName,
+                            "นักเรียน": [newStudentObj]
+                        });
+                    } else {
+                        newStudents.push(newStudentObj);
+                        transaction.update(newClubRef, { "นักเรียน": newStudents });
+                    }
+                });
+                return { status: 'success' };
+            } catch (error) {
+                console.error(error);
+                return { status: 'error', message: error.message };
+            }
         };
     </script>
 
@@ -1175,23 +1441,20 @@
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
             try {
-                const res = await apiCall('getStats', { id: cleanId });
-                if (res.status === 'success') {
-                    // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
-                    while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
-                    try {
-                        const fbStats = await window.fetchFirebaseStats(cleanId, room);
-                        res.data = { ...res.data, ...fbStats };
-                    } catch (fbErr) { console.error('Firebase Preload Error:', fbErr); }
-                    // [สิ้นสุด]
+                // 🚀 ลบคำสั่ง apiCall('getStats') ที่แอบวิ่งไป Google Sheets ออกอย่างเด็ดขาด
+                while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
+                
+                // ดึงสถิติจาก Firebase ล้วนๆ 100%
+                const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                
+                // นำตั้งค่าระบบปัจจุบันไปแนบในข้อมูล เพื่อให้หน้าเว็บทำงานปกติ
+                const dataToSave = { ...fbStats, settings: systemSettings };
 
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                    localStorage.setItem(timeKey, Date.now().toString());
-                    if (res.data.settings) {
-                        systemSettings = res.data.settings;
-                        localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
-                        applySettingsToUI(); 
-                    }
+                localStorage.setItem(cacheKey, JSON.stringify(dataToSave));
+                localStorage.setItem(timeKey, Date.now().toString());
+                
+                if (systemSettings && Object.keys(systemSettings).length > 0) {
+                    applySettingsToUI(); 
                 }
             } catch(e) { console.log('Preload stats skipped'); }
             
@@ -1210,9 +1473,11 @@
             const cacheKey = 'ns_club_list_data';
             const timeKey = 'ns_club_time';
             try {
-                const res = await apiCall('getClubs', {});
-                if (res.status === 'success') {
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                // 🚀 [แก้ไข] เปลี่ยนมาดึงจาก Firebase แทน Google Sheets
+                while (!window.fetchFirebaseClubs) { await new Promise(r => setTimeout(r, 50)); }
+                const clubsData = await window.fetchFirebaseClubs();
+                if (clubsData && clubsData.length > 0) {
+                    localStorage.setItem(cacheKey, JSON.stringify(clubsData));
                     localStorage.setItem(timeKey, Date.now().toString());
                 }
             } catch(e) { console.log('Preload clubs skipped'); }
@@ -1585,6 +1850,24 @@
             switchView('view-login');
         }
 
+        function clearSystemCache() {
+            // เก็บ username ชั่วคราว (ถ้าติ๊กจำรหัสผ่านไว้)
+            const savedUser = localStorage.getItem('ns_username');
+            
+            // ล้างแคชทั้งหมด ทั้ง localStorage และ sessionStorage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // คืนค่า username กลับไป
+            if (savedUser) {
+                localStorage.setItem('ns_username', savedUser);
+            }
+            
+            showAlert('ล้างแคชสำเร็จ', 'ระบบได้ทำการเคลียร์ข้อมูลเดิมทั้งหมดแล้ว\nกด "ตกลง" เพื่อโหลดข้อมูลใหม่', 'success', () => {
+                window.location.reload();
+            });
+        }
+
         function setupDashboard(userObj) {
             const u = userObj.data;
             const role = userObj.role; 
@@ -1692,9 +1975,16 @@
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
             
-            // [ปรับปรุง] เปลี่ยนจาก sessionStorage เป็น localStorage เพื่อให้ข้อมูลคงอยู่เมื่อปิดหน้าเว็บ
             const cachedData = localStorage.getItem(cacheKey);
             const lastFetch = localStorage.getItem(timeKey);
+            
+            // 🚀 [ประหยัดโควต้า] เช็คอายุแคช ถ้าไม่เกิน 10 นาที จะใช้ของเก่าเลย ไม่โหลด Firebase ใหม่พร่ำเพรื่อ
+            let isCacheValid = false;
+            if (cachedData && lastFetch) {
+                if (Date.now() - parseInt(lastFetch) < 600000) { // 10 นาที (600,000 ms)
+                    isCacheValid = true;
+                }
+            }
             
             if (cachedData) {
                 const parsedData = JSON.parse(cachedData);
@@ -1712,31 +2002,36 @@
                 if(currentUser.role !== 'admin') {
                     document.getElementById('stat-scan').innerHTML = '<i class="fas fa-spinner fa-spin text-gray-300"></i>';
                 }
-                try {
-                    const res = await apiCall('getStats', { id: cleanId });
-                    if (!currentUser) return; 
-                    if(res.status === 'success') {
-                        // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
-                        while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
-                        try {
-                            const fbStats = await window.fetchFirebaseStats(cleanId, room);
-                            res.data = { ...res.data, ...fbStats };
-                        } catch (fbErr) { console.error('Firebase Load Error:', fbErr); }
-                        // [สิ้นสุด]
-
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data)); 
-                        localStorage.setItem(timeKey, Date.now().toString());
-                        
-                        if (res.data.settings) {
-                            systemSettings = res.data.settings;
-                            localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
-                        }
-                        
-                        updateStatsUI(res.data);
-                        updateSyncTime('dash-sync-time');
-                    }
-                } catch(e) { }
             }
+
+            // 🚀 หยุดการทำงานตรงนี้ถ้าแคชยังสดใหม่ (เป็นหัวใจหลักในการลดโควต้า!)
+            if (isCacheValid) return; 
+
+            // ดึงข้อมูล Firebase แบบ 100% พร้อมระบบป้องกันการค้าง (Timeout)
+            try {
+                let waitTime = 0;
+                while (!window.fetchFirebaseStats && waitTime < 5000) { 
+                    await new Promise(r => setTimeout(r, 100)); 
+                    waitTime += 100; 
+                }
+                
+                if (!window.fetchFirebaseStats) return;
+
+                const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                
+                if (fbStats && fbStats.firebaseError) {
+                    showAlert('แจ้งเตือนฐานข้อมูล', 'โหลดข้อมูลจาก Firebase ไม่สำเร็จ\n' + fbStats.firebaseError, 'error');
+                    return;
+                }
+
+                const dataToSave = { ...fbStats, settings: systemSettings };
+                localStorage.setItem(cacheKey, JSON.stringify(dataToSave)); 
+                localStorage.setItem(timeKey, Date.now().toString());
+                
+                updateStatsUI(dataToSave);
+                updateSyncTime('dash-sync-time');
+                
+            } catch(e) { console.error('Firebase Load Error:', e); }
         }
 
         let isFetchingStats = false; // ตัวแปรล็อกป้องกันการดึงข้อมูลซ้ำซ้อนถ้าเน็ตช้า
@@ -1760,33 +2055,28 @@
             types.forEach(t => localStorage.removeItem(`ns_stat_details_${cleanId}_${t}`));
             
             try {
-                const res = await apiCall('getStats', { id: cleanId });
-                if(res.status === 'success' && currentUser) {
-                    // [เริ่มการดึงข้อมูลจาก Firebase มาทับข้อมูลจาก Sheets]
-                    while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
-                    try {
-                        const fbStats = await window.fetchFirebaseStats(cleanId, room);
-                        res.data = { ...res.data, ...fbStats };
-                    } catch (fbErr) { console.error('Firebase Refresh Error:', fbErr); }
-                    // [สิ้นสุด]
+                // 🚀 ระบบป้องกันการค้าง
+                let waitTime = 0;
+                while (!window.fetchFirebaseStats && waitTime < 5000) { 
+                    await new Promise(r => setTimeout(r, 100)); 
+                    waitTime += 100; 
+                }
 
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                const fbStats = await window.fetchFirebaseStats(cleanId, room);
+                
+                if (fbStats && fbStats.firebaseError) {
+                    showAlert('แจ้งเตือนฐานข้อมูล', 'เชื่อมต่อ Firebase ไม่สำเร็จ\n' + fbStats.firebaseError, 'error');
+                } else {
+                    const dataToSave = { ...fbStats, settings: systemSettings };
+
+                    localStorage.setItem(cacheKey, JSON.stringify(dataToSave));
                     localStorage.setItem(timeKey, Date.now().toString());
                     
-                    if (res.data.settings) {
-                        systemSettings = res.data.settings;
-                        localStorage.setItem('nsc_settings', JSON.stringify(systemSettings));
-                    }
-                    
-                    updateStatsUI(res.data);
+                    updateStatsUI(dataToSave);
                     updateSyncTime('dash-sync-time');
                     
-                    // ดึงประวัติย่อยใหม่แบบเบื้องหลัง
                     preloadStatDetailsSilent(cleanId);
-                    
-                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลสถิติล่าสุดจากระบบเรียบร้อยแล้ว', 'success');
-                } else {
-                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
+                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลสถิติล่าสุดจาก Firebase เรียบร้อยแล้ว', 'success');
                 }
             } catch (e) { 
                 handleErrorAlert(e);
@@ -1825,34 +2115,37 @@
                 qaClub.classList.add('hidden-view');
             }
 
-            document.getElementById('stat-scan').innerText = data.scanTotal;
-            document.getElementById('stat-scan-in').innerText = data.scanIn;
-            document.getElementById('stat-scan-out').innerText = data.scanOut;
-            document.getElementById('stat-late-school').innerText = data.lateSchool;
-            document.getElementById('stat-missed-class').innerText = data.missedClass;
-            document.getElementById('stat-late-class').innerText = data.lateClass;
-            document.getElementById('stat-skipped-class').innerText = data.skippedClass;
-            document.getElementById('stat-leave').innerText = data.leaveTotal;
-            document.getElementById('stat-leave-sick').innerText = data.leaveSick;
-            document.getElementById('stat-leave-personal').innerText = data.leavePersonal;
+            document.getElementById('stat-scan').innerText = data.scanTotal || 0;
+            document.getElementById('stat-scan-in').innerText = data.scanIn || 0;
+            document.getElementById('stat-scan-out').innerText = data.scanOut || 0;
+            document.getElementById('stat-late-school').innerText = data.lateSchool || 0;
+            document.getElementById('stat-missed-class').innerText = data.missedClass || 0;
+            document.getElementById('stat-late-class').innerText = data.lateClass || 0;
+            document.getElementById('stat-skipped-class').innerText = data.skippedClass || 0;
+            document.getElementById('stat-leave').innerText = data.leaveTotal || 0;
+            document.getElementById('stat-leave-sick').innerText = data.leaveSick || 0;
+            document.getElementById('stat-leave-personal').innerText = data.leavePersonal || 0;
             
-            const totalAbsence = (Number(data.missedClass) || 0) + (Number(data.skippedClass) || 0);
-            
-            // คำนวณจำนวนวิชาที่ติดและแก้ตัวแล้วจาก msDetails
-            let remediatedAbsence = 0;
+            // 🚀 [อัปเกรด] คำนวณความเสี่ยง ม.ส. เป็น "รายวิชา" แทนการนับรวมทุกวิชา
+            let maxActiveAbsence = 0; // ยอดขาดรวมกันสูงสุดของรายวิชาใดวิชาหนึ่ง (ที่ยังไม่ได้แก้ตัว)
             let remCount = 0;
+            let hasDanger = false; // >= 8
+            let hasWarning = false; // >= 4
 
             if (data.msDetails && data.msDetails.length > 0) {
                 data.msDetails.forEach(subj => {
                     if (subj.remediated) {
-                        remediatedAbsence += subj.count;
                         remCount++;
+                    } else {
+                        if (subj.count >= 8) hasDanger = true;
+                        else if (subj.count >= 4) hasWarning = true;
+                        
+                        if (subj.count > maxActiveAbsence) {
+                            maxActiveAbsence = subj.count;
+                        }
                     }
                 });
             }
-            
-            // จำนวนครั้งที่ยังคงทำงานอยู่ (ยอดที่ยังไม่แก้) - จะเป็นตัวกำหนดความยาวของเส้นกราฟ
-            const activeAbsence = Math.max(0, totalAbsence - remediatedAbsence);
 
             const msBadge = document.getElementById('ms-status-badge');
             const msBar = document.getElementById('ms-progress-bar');
@@ -1862,35 +2155,32 @@
             const msDetailsList = document.getElementById('ms-details-list');
             
             if (msBadge && msBar && msIcon) {
-                // คำนวณความกว้างจาก "ยอดที่ยังไม่ได้แก้" เท่านั้น เพื่อให้กราฟหดตัวลง
-                let activeProgressPercent = Math.min(100, (activeAbsence / 10) * 100); 
+                // คำนวณความกว้างกราฟจากวิชาที่ขาดมากที่สุด
+                let activeProgressPercent = Math.min(100, (maxActiveAbsence / 10) * 100); 
                 
-                // ปิดการแสดงผลของกราฟสีทองแบบต่อกัน (ให้ความกว้างเป็น 0)
+                // ปิดกราฟแก้ตัว
                 if (msBarRemediated) msBarRemediated.style.width = '0%';
                 
-                // ให้เส้นกราฟหดตัวลงไปอยู่จุดปลอดภัย
                 msBar.style.width = activeProgressPercent + '%';
 
-                if (activeAbsence >= 8) {
+                if (hasDanger) {
                     msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 shadow-sm';
                     msBadge.innerText = remCount > 0 ? 'แนวโน้มติด ม.ส. (แก้บางส่วน)' : 'แนวโน้มติด ม.ส.';
                     msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-red-500 to-red-600';
                     msIcon.className = 'fas fa-exclamation-triangle text-xl text-red-500 animate-pulse';
-                } else if (activeAbsence >= 4) {
+                } else if (hasWarning) {
                     msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-ns-orange shadow-sm';
                     msBadge.innerText = remCount > 0 ? 'มีความเสี่ยง (แก้บางส่วน)' : 'มีความเสี่ยง';
                     msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-orange-400 to-ns-orange';
                     msIcon.className = 'fas fa-exclamation-circle text-xl text-ns-orange';
                 } else {
-                    // ปลอดภัย (ต่ำกว่า 4 ครั้ง หรือ แก้จนยอดลดลงมาต่ำกว่า 4 แล้ว)
+                    // ปลอดภัย (ต่ำกว่า 4 ครั้ง หรือ แก้จนปลอดภัยหมดแล้ว)
                     if (remCount > 0) {
-                        // ถ้าปลอดภัยเพราะแก้ตัวมาแล้ว ให้เป็นสีเหลืองทอง
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 shadow-sm border border-yellow-200';
                         msBadge.innerText = 'ปลอดภัย (แก้ตัวแล้ว)';
                         msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-yellow-400 to-yellow-500';
                         msIcon.className = 'fas fa-shield-alt text-xl text-yellow-500';
                     } else {
-                        // ปลอดภัยปกติ
                         msBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 shadow-sm';
                         msBadge.innerText = 'ปลอดภัย';
                         msBar.className = 'h-2.5 transition-all duration-700 bg-gradient-to-r from-green-400 to-green-500';
@@ -1898,29 +2188,35 @@
                     }
                 }
 
-                if (totalAbsence >= 4 && data.msDetails && data.msDetails.length > 0) {
+                if (data.msDetails && data.msDetails.length > 0) {
                     msDetailsContainer.classList.remove('hidden-view');
                     let listHtml = '';
                     data.msDetails.forEach(subj => {
-                        // ตรวจสอบสถานะการแก้ตัวเพื่อสลับคลาส CSS (ปรับเป็นสีเขียวทั้งหมด)
                         const isRemediated = subj.remediated === true;
-                        const borderClass = isRemediated ? 'border-green-300' : 'border-red-100';
-                        const bgClass = isRemediated ? 'bg-green-50/70' : 'bg-white';
-                        const nameColor = isRemediated ? 'text-green-700' : 'text-gray-800';
-                        const countColor = isRemediated ? 'text-green-700' : 'text-red-600';
-                        const countLabelColor = isRemediated ? 'text-green-600' : 'text-red-500';
-                        const countBg = isRemediated ? 'bg-green-100 border-green-200' : 'bg-red-50 border-red-200';
                         
-                        // ป้ายกำกับ (Badge) ดำเนินแก้ตัวแล้ว (สีเขียว)
+                        // จัดสีตามความรุนแรงรายวิชา
+                        const isDanger = !isRemediated && subj.count >= 8;
+                        const isWarn = !isRemediated && subj.count >= 4 && subj.count < 8;
+
+                        const borderClass = isRemediated ? 'border-green-300' : (isDanger ? 'border-red-300' : 'border-orange-200');
+                        const bgClass = isRemediated ? 'bg-green-50/70' : (isDanger ? 'bg-red-50' : 'bg-orange-50/50');
+                        const nameColor = isRemediated ? 'text-green-700' : (isDanger ? 'text-red-700' : 'text-orange-700');
+                        const countColor = isRemediated ? 'text-green-700' : (isDanger ? 'text-red-600' : 'text-orange-600');
+                        const countLabelColor = isRemediated ? 'text-green-600' : (isDanger ? 'text-red-500' : 'text-orange-500');
+                        const countBg = isRemediated ? 'bg-green-100 border-green-200' : (isDanger ? 'bg-red-100 border-red-200' : 'bg-orange-100 border-orange-200');
+                        
                         const badgeHtml = isRemediated 
                             ? `<div class="mt-1.5"><span class="text-[9px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm"><i class="fas fa-check-circle mr-1"></i>ดำเนินแก้ตัวแล้ว</span></div>` 
                             : '';
+                            
+                        const subDetails = `<span class="text-[10px] text-gray-500 mr-2 bg-white px-1.5 py-0.5 rounded border border-gray-100">ขาด: ${subj.missed || 0}</span><span class="text-[10px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-100">หนี: ${subj.skipped || 0}</span>`;
 
                         listHtml += `
                         <div class="flex justify-between items-center ${bgClass} p-2.5 rounded-xl border ${borderClass} shadow-sm transition-all mb-2">
                             <div class="flex-1 pr-2">
                                 <p class="text-xs font-bold ${nameColor} leading-tight">${subj.code} ${subj.name}</p>
-                                <p class="text-[10px] text-gray-500 mt-0.5"><i class="fas fa-chalkboard-teacher text-gray-400 mr-1"></i>ครู${subj.teacher.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '')}</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5 mb-1.5"><i class="fas fa-chalkboard-teacher text-gray-400 mr-1"></i>ครู${subj.teacher.replace(/^(นาย|นางสาว|นาง|ว่าที่ร\.ต\.|ว่าที่ร้อยตรี|ครู)/, '')}</p>
+                                <div>${subDetails}</div>
                                 ${badgeHtml}
                             </div>
                             <div class="text-center ${countBg} px-3 py-1.5 rounded-lg border shrink-0">
@@ -2038,7 +2334,6 @@
             if(el) el.innerText = timeStr + " น.";
         }
 
-        // [แก้ไข] ดึงข้อมูลจาก Cache ล่วงหน้า ทำให้แสดงผล 0 วินาที
         async function openDetailModal(type) {
             const titleMap = { 
                 scan: 'ประวัติเข้า-ออก', 
@@ -2055,29 +2350,33 @@
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim();
             const room = currentUser.data.room || null;
             const cacheKey = `ns_stat_details_${cleanId}_${type}`;
-            const timeKey = `ns_stat_details_time_${cleanId}_${type}`; // 🚀 เพิ่มตัวแปรเวลาเช็คแคช
+            const timeKey = `ns_stat_details_time_${cleanId}_${type}`; 
             
             const cachedData = localStorage.getItem(cacheKey);
             const lastFetch = localStorage.getItem(timeKey);
 
-            // 🚀 [ปรับปรุง] หากเคยดึงประวัติมาแล้วใน 5 นาที (300,000 ms) จะเอาของในเครื่องมาแสดงเลย ไม่วิ่งไปกวนโควต้า Firebase
             if (cachedData && lastFetch && (Date.now() - parseInt(lastFetch) < 300000)) {
                 renderDetailModalUI(JSON.parse(cachedData));
             } else {
-                // หากไม่มีให้หมุนโหลดรอ / ถ้ามีแต่หมดอายุให้แสดงภาพเก่าไปพลางๆ
                 if (cachedData) renderDetailModalUI(JSON.parse(cachedData));
-                else document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลจากระบบ...</p></div>';
+                else document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังดึงข้อมูลจากระบบ Firebase...</p></div>';
                 
                 try {
-                    // ดึงรายละเอียดจาก Firebase
-                    while (!window.fetchFirebaseDetails) { await new Promise(r => setTimeout(r, 50)); }
+                    // 🚀 ระบบป้องกันการค้าง
+                    let waitTime = 0;
+                    while (!window.fetchFirebaseDetails && waitTime < 5000) { 
+                        await new Promise(r => setTimeout(r, 100)); 
+                        waitTime += 100; 
+                    }
+                    
+                    if (!window.fetchFirebaseDetails) throw new Error("Firebase module missing");
+
                     const fbDetails = await window.fetchFirebaseDetails(cleanId, type, room);
                     
                     if (fbDetails && fbDetails.length > 0) {
                         localStorage.setItem(cacheKey, JSON.stringify(fbDetails));
-                        localStorage.setItem(timeKey, Date.now().toString()); // บันทึกเวลาที่เพิ่งดึง
+                        localStorage.setItem(timeKey, Date.now().toString()); 
                         
-                        // ถ้านักเรียนยังไม่ได้กดปิดหน้าต่างหนีไปก่อน ให้วาดประวัติที่ดึงเสร็จลงไป
                         if (!document.getElementById('detail-modal').classList.contains('hidden-view') && 
                             document.getElementById('modal-title').innerText === titleMap[type]) {
                             renderDetailModalUI(fbDetails);
@@ -2086,7 +2385,7 @@
                         document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ไม่พบประวัติข้อมูล</p></div>';
                     }
                 } catch(e) {
-                    if (!cachedData) document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>';
+                    if (!cachedData) document.getElementById('modal-content').innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>เกิดข้อผิดพลาดในการโหลดข้อมูล Firebase</p></div>';
                 }
             }
         }
@@ -2273,7 +2572,7 @@
         async function loadClubs() {
             const tableBody = document.getElementById('club-list-body');
             
-            // [ใหม่] ตรวจสอบสวิตช์ปิดระบบหลักก่อน
+            // ตรวจสอบสวิตช์ปิดระบบหลักก่อน
             if (systemSettings && systemSettings.isOpenClub === false) {
                 if (clubInterval) clearInterval(clubInterval);
                 tableBody.innerHTML = `
@@ -2305,24 +2604,32 @@
 
             const cacheKey = 'ns_club_list_data';
             const timeKey = 'ns_club_time';
-            
-            // [ปรับปรุง] เปลี่ยนมาใช้ localStorage
             const cachedData = localStorage.getItem(cacheKey);
             
             if (cachedData) {
+                // ให้แสดงข้อมูลแคชเดิมไปก่อนเพื่อไม่ให้หน้าจอว่างเปล่า
                 renderClubsUI(JSON.parse(cachedData), true);
             } else {
                 tableBody.innerHTML = '<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center text-gray-500 w-full"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-ns-blue"></i><p>กำลังโหลดข้อมูลชุมนุม...</p></div>';
-                try {
-                    const res = await apiCall('getClubs', {});
-                    if (!currentUser) return; 
+            }
 
-                    if(res.status === 'success') {
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                        localStorage.setItem(timeKey, Date.now().toString());
-                        renderClubsUI(res.data, false);
-                    }
-                } catch(e) {}
+            // 🚀 [แก้ไขด่วน] บังคับโหลดข้อมูลสดจาก Firebase มาเขียนทับเสมอ เพื่อล้างแคชเก่าที่ตกค้าง!
+            try {
+                while (!window.fetchFirebaseClubs) { await new Promise(r => setTimeout(r, 50)); }
+                const clubsData = await window.fetchFirebaseClubs();
+                if (!currentUser) return; 
+
+                if(clubsData && clubsData.length > 0) {
+                    localStorage.setItem(cacheKey, JSON.stringify(clubsData));
+                    localStorage.setItem(timeKey, Date.now().toString());
+                    renderClubsUI(clubsData, false);
+                } else if (clubsData && clubsData.length === 0 && !cachedData) {
+                    tableBody.innerHTML = '<div class="text-center py-8 text-gray-500"><p>ไม่พบข้อมูลชุมนุมในระบบ Firebase</p></div>';
+                }
+            } catch(e) {
+                if (e.message === "FIREBASE_DENIED") {
+                    tableBody.innerHTML = '<div class="text-center py-8 text-red-500"><i class="fas fa-lock text-3xl mb-3"></i><p>ฐานข้อมูล Firebase ถูกล็อกสิทธิ์</p><p class="text-[10px] mt-1 text-gray-500">โปรดตั้งค่า Rules ใน Firestore เป็น allow read, write: if true;</p></div>';
+                }
             }
         }
 
@@ -2335,17 +2642,23 @@
             if (icon) icon.classList.add('fa-spin');
             
             try {
-                const res = await apiCall('getClubs', {});
-                if(res.status === 'success' && currentUser) {
-                    localStorage.setItem(cacheKey, JSON.stringify(res.data));
+                while (!window.fetchFirebaseClubs) { await new Promise(r => setTimeout(r, 50)); }
+                const clubsData = await window.fetchFirebaseClubs();
+                
+                if(clubsData && clubsData.length > 0 && currentUser) {
+                    localStorage.setItem(cacheKey, JSON.stringify(clubsData));
                     localStorage.setItem(timeKey, Date.now().toString());
-                    renderClubsUI(res.data, false);
-                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลชุมนุมล่าสุดเรียบร้อยแล้ว', 'success');
-                } else {
-                    showAlert('ข้อผิดพลาด', res.message || 'ไม่สามารถอัปเดตข้อมูลได้', 'error');
+                    renderClubsUI(clubsData, false);
+                    showAlert('อัปเดตข้อมูลสำเร็จ', 'ดึงข้อมูลชุมนุมสดๆ จาก Firebase เรียบร้อยแล้ว', 'success');
+                } else if(clubsData && clubsData.length === 0) {
+                    showAlert('แจ้งเตือน', 'ดึงข้อมูลจาก Firebase สำเร็จ แต่ยังไม่มีชุมนุมเปิดรับสมัคร', 'info');
                 }
             } catch (e) { 
-                handleErrorAlert(e);
+                if (e.message === "FIREBASE_DENIED") {
+                    showAlert('ข้อผิดพลาด', 'ฐานข้อมูล Firebase ถูกล็อกสิทธิ์การอ่าน (ติด Rules)\nกรุณาตั้งค่า Firestore Rules ให้เป็น true', 'error');
+                } else {
+                    handleErrorAlert(e);
+                }
             } finally {
                 if (icon) icon.classList.remove('fa-spin');
             }
@@ -2355,9 +2668,16 @@
             clubDataList = data;
             const tableBody = document.getElementById('club-list-body');
             let html = '';
+            let availableCount = 0; // ตัวนับจำนวนที่ยังไม่เต็ม
+
             data.forEach(c => {
                 const remains = c.max - c.reg;
                 const isFull = remains <= 0;
+                
+                // 🚀 กรองชุมนุมที่เต็มแล้วออก 100% ไม่นำมาวาดบนหน้าจอ
+                if (isFull) return;
+                
+                availableCount++;
                 
                 const teachers = c.teacher.split(',').map(t => {
                     let name = t.trim();
@@ -2397,23 +2717,25 @@
                             </div>
                             <div>
                                 <p class="text-[10px] text-gray-500 font-medium mb-0.5">จำนวนคงเหลือ</p>
-                                <p class="font-bold ${isFull ? 'text-red-500' : 'text-green-500'} text-sm">${remains}</p>
+                                <p class="font-bold text-green-500 text-sm">${remains}</p>
                             </div>
                         </div>
                         
                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-3 overflow-hidden">
-                            <div class="bg-gradient-to-r ${isFull ? 'from-red-400 to-red-600' : 'from-purple-400 to-ns-blue'} h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            <div class="bg-gradient-to-r from-purple-400 to-ns-blue h-1.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
                     </div>
                     
                     <div class="w-full sm:w-auto flex flex-col items-center justify-center pt-3 sm:pt-0 border-t sm:border-t-0 sm:border-l border-gray-100 sm:pl-5 mt-2 sm:mt-0">
-                        ${isFull 
-                            ? `<button disabled class="w-full sm:w-auto bg-red-50 text-red-500 px-5 py-3 rounded-xl text-sm font-bold border border-red-100 flex items-center justify-center gap-2 cursor-not-allowed"><i class="fas fa-ban"></i> เต็มแล้ว</button>`
-                            : `<button onclick="promptClubReg('${c.id}')" class="w-full sm:w-auto bg-gradient-to-r from-ns-blue to-purple-600 hover:from-blue-800 hover:to-purple-800 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fas fa-check-circle"></i> สมัครเลือกชุมนุม</button>`
-                        }
+                        <button onclick="promptClubReg('${c.id}')" class="w-full sm:w-auto bg-gradient-to-r from-ns-blue to-purple-600 hover:from-blue-800 hover:to-purple-800 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fas fa-check-circle"></i> สมัครเลือกชุมนุม</button>
                     </div>
                 </div>`;
             });
+            
+            if (availableCount === 0) {
+                html = '<div class="text-center py-8 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i><p>ขณะนี้ทุกชุมนุมเต็มหมดแล้ว</p></div>';
+            }
+            
             tableBody.innerHTML = html;
         }
 
