@@ -80,6 +80,7 @@
                 </div>
                 <h1 class="text-2xl font-bold text-ns-blue">NS Student Care</h1>
                 <p id="school-name-login" class="text-gray-500 text-sm">กำลังเชื่อมต่อฐานข้อมูล...</p>
+                <!-- 🚀 เปลี่ยนป้ายข้อความกลับเป็น สำหรับนักเรียน -->
                 <span class="inline-block bg-blue-50 text-ns-blue text-xs px-3 py-1 rounded-full font-medium mt-2">สำหรับนักเรียน</span>
             </div>
 
@@ -115,6 +116,7 @@
                 </button>
             </form>
 
+            <!-- 🚀 ซ่อนปุ่มลงทะเบียนผู้ปกครอง โดยเพิ่มคลาส hidden-view -->
             <div class="mt-8 text-center border-t pt-6 border-gray-200 hidden-view">
                 <p class="text-sm text-gray-600 mb-2">สำหรับผู้ปกครองที่ยังไม่มีบัญชี</p>
                 <button onclick="switchView('view-register')" class="text-ns-orange font-semibold hover:underline">
@@ -1207,6 +1209,31 @@
             } catch (err) {
                 console.error("Firebase details fetch error:", err);
             }
+            
+            // 🚀 [ใหม่] จัดเรียงข้อมูลจาก วันล่าสุด ไป วันเก่าสุด (Descending Order) และเรียงตามเวลาด้วย
+            details.sort((a, b) => {
+                const parseDateTime = (item) => {
+                    let score = 0;
+                    // แปลงวันที่ (เช่น 04/06/2569) ให้เป็นตัวเลขเพื่อใช้เรียงลำดับ
+                    const dateMatch = String(item.date).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                    if (dateMatch) {
+                        const d = dateMatch[1].padStart(2, '0');
+                        const m = dateMatch[2].padStart(2, '0');
+                        const y = dateMatch[3];
+                        score += parseInt(`${y}${m}${d}0000`, 10); 
+                    }
+                    // ถ้ามีเวลาซ่อนอยู่ในช่องรายละเอียด (เช่น เวลา: 06:58) ให้นำมาเรียงซ้อนอีกชั้น
+                    const timeMatch = String(item.detail).match(/เวลา:\s*(\d{1,2}):(\d{1,2})/);
+                    if (timeMatch) {
+                        const hr = timeMatch[1].padStart(2, '0');
+                        const min = timeMatch[2].padStart(2, '0');
+                        score += parseInt(`${hr}${min}`, 10);
+                    }
+                    return score;
+                };
+                return parseDateTime(b) - parseDateTime(a); // มากไปน้อย (ใหม่ไปเก่า)
+            });
+
             return details;
         };
 
@@ -1398,8 +1425,10 @@
             const isLineBrowser = /Line/i.test(navigator.userAgent);
             if (isLineBrowser) {
                 const lineWarning = document.getElementById('line-browser-warning');
-                lineWarning.classList.remove('hidden-view');
-                lineWarning.classList.add('flex');
+                if (lineWarning) {
+                    lineWarning.classList.remove('hidden-view');
+                    lineWarning.classList.add('flex');
+                }
             }
 
             const savedUser = localStorage.getItem('ns_username');
@@ -1422,14 +1451,7 @@
             // [ใหม่] พรีโหลดข้อมูลชุมนุมรอไว้สำหรับทุกคน
             preloadClubsSilent();
 
-            // [ใหม่] หากพิมพ์ชื่อผู้ใช้ใหม่ ให้แอบโหลดข้อมูลเตรียมรอไว้เลย (ตอนเปลี่ยนไปช่องรหัสผ่าน)
-            document.getElementById('login-username').addEventListener('blur', (e) => {
-                const u = e.target.value.trim();
-                if (u.length >= 4) {
-                    const cleanId = u.replace(/_p|_P/gi, '').trim();
-                    preloadStatsSilent(cleanId);
-                }
-            });
+            // 🚀 [ลบฟังก์ชันแอบโหลดตอนพิมพ์ชื่อออก] เพื่อประหยัดโควต้า Firebase ขั้นสูงสุด
 
             document.getElementById('leave-date').valueAsDate = new Date();
             await initApp();
@@ -1440,8 +1462,15 @@
         async function preloadStatsSilent(cleanId, room = null) {
             const cacheKey = 'ns_stats_' + cleanId;
             const timeKey = 'ns_stats_time_' + cleanId;
+
+            // 🚀 [อุดรอยรั่วโควต้า] เช็คก่อนว่าเพิ่งโหลดไปไม่เกิน 10 นาทีหรือเปล่า
+            const lastFetch = localStorage.getItem(timeKey);
+            if (lastFetch && (Date.now() - parseInt(lastFetch) < 600000)) {
+                return; // ถ้ายังมีแคชที่อัปเดตอยู่ ให้หยุดการทำงานทันที ไม่ดึงโควต้า Firebase ฟรีๆ
+            }
+
             try {
-                // 🚀 ลบคำสั่ง apiCall('getStats') ที่แอบวิ่งไป Google Sheets ออกอย่างเด็ดขาด
+                // ลบคำสั่ง apiCall('getStats') ที่แอบวิ่งไป Google Sheets ออกอย่างเด็ดขาด
                 while (!window.fetchFirebaseStats) { await new Promise(r => setTimeout(r, 50)); }
                 
                 // ดึงสถิติจาก Firebase ล้วนๆ 100%
@@ -1472,8 +1501,15 @@
         async function preloadClubsSilent() {
             const cacheKey = 'ns_club_list_data';
             const timeKey = 'ns_club_time';
+
+            // 🚀 [อุดรอยรั่วโควต้า] ชุมนุมไม่ต้องโหลดถี่ เช็คว่าเพิ่งโหลดไปไม่เกิน 30 นาที ให้ข้ามไปเลย
+            const lastFetch = localStorage.getItem(timeKey);
+            if (lastFetch && (Date.now() - parseInt(lastFetch) < 1800000)) {
+                return; // ประหยัดโควต้าการอ่านเอกสารชุมนุม
+            }
+
             try {
-                // 🚀 [แก้ไข] เปลี่ยนมาดึงจาก Firebase แทน Google Sheets
+                // เปลี่ยนมาดึงจาก Firebase แทน Google Sheets
                 while (!window.fetchFirebaseClubs) { await new Promise(r => setTimeout(r, 50)); }
                 const clubsData = await window.fetchFirebaseClubs();
                 if (clubsData && clubsData.length > 0) {
@@ -1978,14 +2014,7 @@
             const cachedData = localStorage.getItem(cacheKey);
             const lastFetch = localStorage.getItem(timeKey);
             
-            // 🚀 [ประหยัดโควต้า] เช็คอายุแคช ถ้าไม่เกิน 10 นาที จะใช้ของเก่าเลย ไม่โหลด Firebase ใหม่พร่ำเพรื่อ
-            let isCacheValid = false;
-            if (cachedData && lastFetch) {
-                if (Date.now() - parseInt(lastFetch) < 600000) { // 10 นาที (600,000 ms)
-                    isCacheValid = true;
-                }
-            }
-            
+            // 🚀 [ประหยัดโควต้าสูงสุด] ถ้ามีข้อมูลแคชอยู่แล้ว จะงัดของเดิมมาใช้เสมอ ไม่อัปเดตอัตโนมัติ
             if (cachedData) {
                 const parsedData = JSON.parse(cachedData);
                 systemSettings = parsedData.settings || systemSettings;
@@ -1998,16 +2027,16 @@
                 } else {
                     document.getElementById('dash-sync-time').innerText = "ข้อมูลแคชเดิม";
                 }
+                
+                // 🚀 หยุดการทำงานทันที ปล่อยให้ผู้ใช้ตัดสินใจกดปุ่ม "อัปเดตข้อมูลล่าสุด" เองเท่านั้น!
+                return; 
             } else {
                 if(currentUser.role !== 'admin') {
                     document.getElementById('stat-scan').innerHTML = '<i class="fas fa-spinner fa-spin text-gray-300"></i>';
                 }
             }
 
-            // 🚀 หยุดการทำงานตรงนี้ถ้าแคชยังสดใหม่ (เป็นหัวใจหลักในการลดโควต้า!)
-            if (isCacheValid) return; 
-
-            // ดึงข้อมูล Firebase แบบ 100% พร้อมระบบป้องกันการค้าง (Timeout)
+            // ถ้าไม่มีแคช (โหลดครั้งแรกสุด) ดึงข้อมูลจาก Firebase ทันที
             try {
                 let waitTime = 0;
                 while (!window.fetchFirebaseStats && waitTime < 5000) { 
@@ -2087,6 +2116,9 @@
         }
 
         function updateStatsUI(data) {
+            // 🚀 [แก้ไขด่วน] ดักจับป้องกัน Error: หากไม่มีข้อมูลผู้ใช้ (เช่น กดล็อกเอาท์ไปแล้ว) ให้หยุดการทำงานทันที
+            if (!currentUser) return; 
+
             const role = currentUser.role;
             
             if (role === 'admin') {
@@ -2757,33 +2789,20 @@
         }
         function closeClubModal() { document.getElementById('club-reg-modal').classList.add('hidden-view'); }
 
+        let isRegisteringClub = false; // ตัวแปรล็อกป้องกันการกดปุ่มซ้ำรัวๆ
+
         async function confirmClubRegistration() {
-            closeClubModal();
-            navApp('dashboard'); 
+            if (isRegisteringClub) return; // ถ้ากำลังสมัครอยู่ให้เมินการกดปุ่ม
+            isRegisteringClub = true;
+            
+            // 🚀 เปิดหน้าจอโหลดค้างไว้เพื่อบล็อกไม่ให้นักเรียนกดปุ่มอื่น หรือกดรัวจนข้อมูลชนกัน
+            document.getElementById('loading-text').innerText = "กำลังตรวจสอบสิทธิ์และลงทะเบียน...";
+            showLoading();
             
             const club = clubDataList.find(c => c.id === selectedClubId);
             const u = currentUser.data;
             const cleanId = String(u.id).replace(/_p|_P/gi, '').trim(); 
-
             const oldClub = studentCurrentClub ? JSON.parse(JSON.stringify(studentCurrentClub)) : null;
-
-            studentCurrentClub = {
-                id: club.id,
-                name: club.name,
-                regDate: new Date().toISOString(),
-                teacher: club.teacher,
-                objective: club.objective,
-                location: club.location,
-                equipment: club.equipment
-            };
-
-            const cacheKey = 'ns_stats_' + cleanId;
-            let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
-            currentStats.currentClub = studentCurrentClub;
-            updateStatsUI(currentStats);
-
-            const dashSyncTime = document.getElementById('dash-sync-time');
-            if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึกเบื้องหลัง...';
 
             const payload = {
                 clubId: selectedClubId,
@@ -2797,30 +2816,55 @@
                 equipment: club.equipment
             };
 
-            // โยนเข้า Firebase อัตโนมัติ ป้องกันคิวเกิน
-            while (!window.registerFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
-            window.registerFirebaseClub(payload).then(res => {
+            try {
+                // โยนเข้า Firebase (Firebase Transaction จะเรียงคิวให้เอง หากคนสมัครพร้อมกันในเสี้ยววิ)
+                while (!window.registerFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
+                const res = await window.registerFirebaseClub(payload);
+                
+                hideLoading(); // ปลดล็อกหน้าจอ
+                isRegisteringClub = false;
+
                 if(res.status === 'success') {
+                    closeClubModal();
+                    
+                    // บันทึกข้อมูลลงเครื่อง
+                    studentCurrentClub = {
+                        id: club.id,
+                        name: club.name,
+                        regDate: new Date().toISOString(),
+                        teacher: club.teacher,
+                        objective: club.objective,
+                        location: club.location,
+                        equipment: club.equipment
+                    };
+
+                    const cacheKey = 'ns_stats_' + cleanId;
+                    let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+                    currentStats.currentClub = studentCurrentClub;
                     localStorage.setItem(cacheKey, JSON.stringify(currentStats));
+                    
+                    // ล้างแคชชุมนุมรวมทิ้ง เพื่อบังคับให้อัปเดตยอดคงเหลือในรอบถัดไป
                     localStorage.removeItem('ns_club_list_data');
                     localStorage.removeItem('ns_club_time');
 
+                    updateStatsUI(currentStats);
+                    navApp('dashboard'); 
+                    
+                    const dashSyncTime = document.getElementById('dash-sync-time');
                     if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-check text-green-500 mr-1"></i> บันทึกสำเร็จ';
                     setTimeout(() => updateSyncTime('dash-sync-time'), 3000);
+                    
+                    showAlert('ลงทะเบียนสำเร็จ!', `คุณได้ลงทะเบียนชุมนุม ${club.name} เรียบร้อยแล้ว`, 'success');
                 } else {
-                    studentCurrentClub = oldClub;
-                    currentStats.currentClub = oldClub;
-                    updateStatsUI(currentStats);
-                    if(dashSyncTime) updateSyncTime('dash-sync-time');
+                    closeClubModal();
                     showAlert('ไม่สามารถลงทะเบียนได้', res.message, 'error');
                 }
-            }).catch(e => {
-                studentCurrentClub = oldClub;
-                currentStats.currentClub = oldClub;
-                updateStatsUI(currentStats);
-                if(dashSyncTime) updateSyncTime('dash-sync-time');
-                showAlert('เกิดข้อผิดพลาด', 'ระบบบันทึกไม่สำเร็จ', 'error');
-            });
+            } catch(e) {
+                hideLoading();
+                isRegisteringClub = false;
+                closeClubModal();
+                showAlert('เกิดข้อผิดพลาด', 'ระบบทำงานผิดพลาด กรุณาลองใหม่', 'error');
+            }
         }
 
         async function openChangeClubModal() {
@@ -2924,39 +2968,26 @@
             document.getElementById('confirm-change-modal').classList.remove('hidden-view');
         }
 
+        let isChangingClub = false;
+
         async function executeClubChange() {
+            if (isChangingClub) return;
+            isChangingClub = true;
+            
+            // 🚀 เปิดหน้าจอโหลดเพื่อบล็อกการกดรัว
+            document.getElementById('loading-text').innerText = "กำลังสลับชุมนุมและตรวจสอบสิทธิ์...";
+            showLoading();
             document.getElementById('confirm-change-modal').classList.add('hidden-view');
-            closeChangeClubModal();
-            navApp('dashboard'); 
             
             const club = clubDataList.find(c => c.id === newSelectedClubId);
             const cleanId = String(currentUser.data.id).replace(/_p|_P/gi, '').trim(); 
-            
             const oldClub = studentCurrentClub ? JSON.parse(JSON.stringify(studentCurrentClub)) : null;
-
-            studentCurrentClub = {
-                id: club.id,
-                name: club.name,
-                regDate: new Date().toISOString(),
-                teacher: club.teacher,
-                objective: club.objective,
-                location: club.location,
-                equipment: club.equipment
-            };
-
-            const cacheKey = 'ns_stats_' + cleanId;
-            let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
-            currentStats.currentClub = studentCurrentClub;
-            updateStatsUI(currentStats);
-
-            const dashSyncTime = document.getElementById('dash-sync-time');
-            if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึกเบื้องหลัง...';
 
             const payload = {
                 studentId: cleanId, 
                 studentName: currentUser.data.name,
                 room: currentUser.data.room,
-                oldClubName: oldClub ? oldClub.name : "-", // เพิ่มการส่งชื่อชุมนุมเดิมไปลบด้วย
+                oldClubName: oldClub ? oldClub.name : "-", 
                 newClubId: club.id,
                 newClubName: club.name,
                 newTeacher: club.teacher,
@@ -2965,30 +2996,50 @@
                 newEquipment: club.equipment
             };
 
-            // เรียก Firebase เปลี่ยนชุมนุมโดยทำ Transaction เพื่อปลดคิวเดิมเข้าคิวใหม่
-            while (!window.changeFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
-            window.changeFirebaseClub(payload).then(res => {
+            try {
+                while (!window.changeFirebaseClub) { await new Promise(r => setTimeout(r, 50)); }
+                const res = await window.changeFirebaseClub(payload);
+                
+                hideLoading();
+                isChangingClub = false;
+
                 if(res.status === 'success') {
+                    closeChangeClubModal();
+                    
+                    studentCurrentClub = {
+                        id: club.id,
+                        name: club.name,
+                        regDate: new Date().toISOString(),
+                        teacher: club.teacher,
+                        objective: club.objective,
+                        location: club.location,
+                        equipment: club.equipment
+                    };
+
+                    const cacheKey = 'ns_stats_' + cleanId;
+                    let currentStats = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+                    currentStats.currentClub = studentCurrentClub;
                     localStorage.setItem(cacheKey, JSON.stringify(currentStats));
+                    
                     localStorage.removeItem('ns_club_list_data');
                     localStorage.removeItem('ns_club_time');
 
+                    updateStatsUI(currentStats);
+                    navApp('dashboard'); 
+                    
+                    const dashSyncTime = document.getElementById('dash-sync-time');
                     if(dashSyncTime) dashSyncTime.innerHTML = '<i class="fas fa-check text-green-500 mr-1"></i> บันทึกสำเร็จ';
                     setTimeout(() => updateSyncTime('dash-sync-time'), 3000);
+                    
+                    showAlert('เปลี่ยนชุมนุมสำเร็จ!', `คุณได้สลับไปยังชุมนุม ${club.name} เรียบร้อยแล้ว`, 'success');
                 } else {
-                    studentCurrentClub = oldClub;
-                    currentStats.currentClub = oldClub;
-                    updateStatsUI(currentStats);
-                    if(dashSyncTime) updateSyncTime('dash-sync-time');
                     showAlert('ไม่สามารถเปลี่ยนชุมนุมได้', res.message, 'error');
                 }
-            }).catch(e => {
-                studentCurrentClub = oldClub;
-                currentStats.currentClub = oldClub;
-                updateStatsUI(currentStats);
-                if(dashSyncTime) updateSyncTime('dash-sync-time');
+            } catch(e) {
+                hideLoading();
+                isChangingClub = false;
                 showAlert('เกิดข้อผิดพลาด', 'ระบบสลับคิวชุมนุมไม่สำเร็จ', 'error');
-            });
+            }
         }
 
         document.getElementById('set-logo-file').addEventListener('change', function(e) {
